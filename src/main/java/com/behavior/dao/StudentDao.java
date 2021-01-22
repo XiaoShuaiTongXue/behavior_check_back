@@ -14,10 +14,12 @@ public interface StudentDao extends JpaRepository<Student,String>, JpaSpecificat
 
     Student findUserByStudentNumber(String studentNumber);
 
-    Student findStudentsByClassId(String classId);
+    @Query(nativeQuery = true,value = "SELECT `id` FROM `tb_student` WHERE `class_id` in (?1)")
+    List<String> findIdsByClassIds(List<String> classIds);
 
     List<Student> findAllByClassIdIn(List<String>classIds);
 
     @Query(nativeQuery = true,value = "select `face_csv` from `tb_student` where id = ?")
     String findFaceCsvByStudentId(String id);
+
 }

@@ -8,20 +8,13 @@ import com.behavior.services.ITeacherService;
 import com.behavior.utils.*;
 import io.jsonwebtoken.Claims;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
-import org.springframework.data.domain.Sort;
-import org.springframework.data.jpa.domain.Specification;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.util.DigestUtils;
 import org.springframework.web.context.request.RequestContextHolder;
 import org.springframework.web.context.request.ServletRequestAttributes;
 
-import javax.persistence.criteria.CriteriaBuilder;
-import javax.persistence.criteria.CriteriaQuery;
-import javax.persistence.criteria.Predicate;
-import javax.persistence.criteria.Root;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import javax.transaction.Transactional;
@@ -56,6 +49,22 @@ public class TeacherServiceImp implements ITeacherService {
     @Autowired
     private SignStudentDao signStudentDao;
 
+    @Autowired
+    private OnlineCourseDao onlineCourseDao;
+
+    @Autowired
+    private OutlineCourseDao outlineCourseDao;
+
+    @Autowired
+    private BehaviorOnlineStudentDao behaviorOnlineStudentDao;
+
+    @Autowired
+    private BehaviorOutlineStudentDao behaviorOutlineStudentDao;
+    /**
+     * 注册
+     * @param teacher 注册老师信息
+     * @return
+     */
     @Override
     public ResponseResult register(Teacher teacher) {
         String name = teacher.getName();
@@ -87,6 +96,11 @@ public class TeacherServiceImp implements ITeacherService {
         return ResponseResult.SUCCESS("注册成功");
     }
 
+    /**
+     * 登录
+     * @param teacher 老师登录信息
+     * @return
+     */
     @Override
     public ResponseResult doLogin(Teacher teacher) {
         String teacherNumber = teacher.getTeacherNumber();
@@ -110,6 +124,10 @@ public class TeacherServiceImp implements ITeacherService {
         return ResponseResult.Get(ResponseState.LOGIN_IN_SUCCESS);
     }
 
+    /**
+     * 检测并获取用户信息
+     * @return
+     */
     @Override
     public Teacher checkTeacher() {
         HttpServletRequest request = getServletRequest();
@@ -117,6 +135,10 @@ public class TeacherServiceImp implements ITeacherService {
         return getTeacherByTokenKey(tokenKey);
     }
 
+    /**
+     * 获取老师教的课程
+     * @return
+     */
     @Override
     public ResponseResult getCourseName() {
         Teacher teacher = checkTeacher();
@@ -131,6 +153,13 @@ public class TeacherServiceImp implements ITeacherService {
         return ResponseResult.SUCCESS("获取课程成功").setData(courseMaps);
     }
 
+    /**
+     * 开始签到
+     * @param courseName 课程名称
+     * @param signTime 迟到截止时长（分）
+     * @param truantTime 旷课截止时长（分）
+     * @return
+     */
     @Override
     public ResponseResult beginSign(String courseName, int signTime,int truantTime) {
         Teacher teacher = checkTeacher();
@@ -142,11 +171,11 @@ public class TeacherServiceImp implements ITeacherService {
         if (recordId != null) {
             return ResponseResult.FAILED("当前课前签到未结束，请稍后后重试").setData(recordId);
         }
-        Course course = courseDao.findCourseByCourseNameAndTeacherId(courseName, teacherId);
+        String courseId = courseDao.findCourseIdByCourseNameAndTeacherId(courseName, teacherId);
         SignRecord signRecord = new SignRecord();
         recordId = String.valueOf(idWorker.nextId());
         signRecord.setId(recordId);
-        signRecord.setCourseId(course.getId());
+        signRecord.setCourseId(courseId);
         Date startDate = new Date();
         Calendar calendar = Calendar.getInstance();
         calendar.setTime(startDate);
@@ -160,15 +189,12 @@ public class TeacherServiceImp implements ITeacherService {
         redisUtil.set(Constants.User.TEACHER_KEY_RECORD + teacherId, recordId, Constants.TimeValueByS.MIN * signTime);
         redisUtil.set(Constants.User.NORMAL_SIGN+recordId,1,Constants.TimeValueByS.MIN * signTime);
         redisUtil.set(Constants.User.LATER_SIGN+recordId,1,Constants.TimeValueByS.MIN * truantTime);
-        List<String> classIds = new ArrayList<>();
-        for (Classes mClass : course.getClasses()) {
-            classIds.add(mClass.getId());
-        }
-        List<Student> students = studentDao.findAllByClassIdIn(classIds);
-        for (Student student : students) {
+        List<String> classIds = courseDao.findClassIdsByCourseId(courseId);
+        List<String> studentIds = studentDao.findIdsByClassIds(classIds);
+        for (String studentId : studentIds) {
             SignStudent signStudent = new SignStudent();
             signStudent.setId(String.valueOf(idWorker.nextId()));
-            signStudent.setStudentId(student.getId());
+            signStudent.setStudentId(studentId);
             signStudent.setSignRecordId(recordId);
             signStudent.setSignState(Constants.SignState.TRUANT_STATE);
             signStudentDao.save(signStudent);
@@ -176,6 +202,12 @@ public class TeacherServiceImp implements ITeacherService {
         return ResponseResult.SUCCESS("开始签到").setData(recordId);
     }
 
+    /**
+     * 更新签到状态
+     * @param signStudentID 学生签到ID
+     * @param state 更新得签到
+     * @return
+     */
     @Override
     public ResponseResult updateSign(String signStudentID, int state) {
         if (!TextUtil.judgeState(state)) {
@@ -188,6 +220,14 @@ public class TeacherServiceImp implements ITeacherService {
         return ResponseResult.SUCCESS("学生签到信息修改失败");
     }
 
+    /**
+     * 获取签到信息
+     * @param page 页码
+     * @param size 每页的条数
+     * @param courseName 课程名称
+     * @param date 签到日期
+     * @return
+     */
     @Override
     public ResponseResult getSignInfo(int page, int size, String courseName, String date) {
         Teacher teacher = checkTeacher();
@@ -214,13 +254,100 @@ public class TeacherServiceImp implements ITeacherService {
         return ResponseResult.SUCCESS("查询成功").setData(signStudent);
     }
 
+    /**
+     * 根据课程ID获取课程的所有签到日期
+     * @param courseId 课程ID
+     * @return
+     */
     @Override
     public ResponseResult getCourseDate(String courseId) {
         List<String> signRecordDates = signRecordDao.findSignRecordsDateByCourseId(courseId);
         return ResponseResult.SUCCESS("获取日期成功").setData(signRecordDates);
     }
 
+    @Override
+    public ResponseResult beginBehavior(String courseName,int type) {
+        Teacher teacher = checkTeacher();
+        if (teacher == null) {
+            return ResponseResult.FAILED("当前账号未登录，请登录后重试");
+        }
+        String courseId = courseDao.findCourseIdByCourseNameAndTeacherId(courseName, teacher.getId());
+        List<String> classIds = courseDao.findClassIdsByCourseId(courseId);
+        List<String> studentIds = studentDao.findIdsByClassIds(classIds);
+        String behaviorId = String.valueOf(idWorker.nextId());
+        if (type == Constants.Behavior.BEHAVIOR_ONLINE) {
+            if (redisUtil.get(Constants.User.TEACHER_KEY_ONLINE + courseId) != null) {
+                return ResponseResult.FAILED("该课程已经开启线上行为检测，无法重复开启");
+            }
+            OnlineCourse onlineCourse = new OnlineCourse();
+            onlineCourse.setId(behaviorId);
+            onlineCourse.setBehaviorStartTime(new Date());
+            onlineCourse.setCourseId(courseId);
+            onlineCourseDao.save(onlineCourse);
+            for (String studentId : studentIds) {
+                BehaviorOnlineStudent behaviorOnlineStudent = new BehaviorOnlineStudent();
+                behaviorOnlineStudent.setId(String.valueOf(idWorker.nextId()));
+                behaviorOnlineStudent.setStudentId(studentId);
+                behaviorOnlineStudent.setBehaviorId(behaviorId);
+                behaviorOnlineStudent.setPostTime(new Date());
+                behaviorOnlineStudentDao.save(behaviorOnlineStudent);
+            }
+            redisUtil.set(Constants.User.TEACHER_KEY_ONLINE + courseId, behaviorId);
+        }else if (type == Constants.Behavior.BEHAVIOR_OUTLINE){
+            if (redisUtil.get(Constants.User.TEACHER_KEY_OUTLINE + courseId) != null) {
+                return ResponseResult.FAILED("该课程已经开启线下行为检测，无法重复开启");
+            }
+            OutlineCourse outlineCourse = new OutlineCourse();
+            outlineCourse.setId(behaviorId);
+            outlineCourse.setBehaviorStartTime(new Date());
+            outlineCourse.setCourseId(courseId);
+            outlineCourseDao.save(outlineCourse);
+            for (String studentId : studentIds) {
+                BehaviorOutlineStudent behaviorOutlineStudent = new BehaviorOutlineStudent();
+                behaviorOutlineStudent.setId(String.valueOf(idWorker.nextId()));
+                behaviorOutlineStudent.setStudentId(studentId);
+                behaviorOutlineStudent.setBehaviorId(behaviorId);
+                behaviorOutlineStudent.setPostTime(new Date());
+                behaviorOutlineStudentDao.save(behaviorOutlineStudent);
+            }
+            redisUtil.set(Constants.User.TEACHER_KEY_OUTLINE + courseId, behaviorId);
+        }else {
+            return ResponseResult.FAILED("类型错误");
+        }
+        return ResponseResult.SUCCESS(teacher.getName()+"-"+courseName+"课程:行为检测开始").setData(studentIds);
+    }
 
+
+    @Override
+    public ResponseResult stopBehavior(String courseName,int type) {
+        Teacher teacher = checkTeacher();
+        if (teacher == null) {
+            return ResponseResult.FAILED("当前账号未登录，请登录后重试");
+        }
+        String courseId = courseDao.findCourseIdByCourseNameAndTeacherId(courseName, teacher.getId());
+        if (type == Constants.Behavior.BEHAVIOR_ONLINE){
+            String onlineBehaviorId = (String) redisUtil.get(Constants.User.TEACHER_KEY_ONLINE + courseId);
+            if (TextUtil.isEmpty(onlineBehaviorId)) {
+                return ResponseResult.FAILED(teacher.getName()+"的"+courseName+"课程未开启线上行为检测");
+            }
+            onlineCourseDao.updateEndTimeById(new Date(),onlineBehaviorId);
+            redisUtil.del(Constants.User.TEACHER_KEY_ONLINE + courseId);
+        }else if(type == Constants.Behavior.BEHAVIOR_OUTLINE){
+            String outlineBehaviorId = (String) redisUtil.get(Constants.User.TEACHER_KEY_OUTLINE + courseId);
+            if (TextUtil.isEmpty(outlineBehaviorId)) {
+                return ResponseResult.FAILED(teacher.getName()+"的"+courseName+"课程未开启线下行为检测");
+            }
+            outlineCourseDao.updateEndTimeById(new Date(),outlineBehaviorId);
+            redisUtil.del(Constants.User.TEACHER_KEY_OUTLINE + courseId);
+        }
+        return ResponseResult.SUCCESS(teacher.getName()+"-"+courseName+"课程: 行为检测结束");
+    }
+
+    /**
+     * 根据信息生成token
+     * @param teacher 老师信息
+     * @return
+     */
     private String createToken(Teacher teacher) {
         HttpServletResponse response = getServletResponse();
         String token = JwtUtil.createToken(ClaimsUtils.teacher2Claims(teacher));
@@ -241,6 +368,11 @@ public class TeacherServiceImp implements ITeacherService {
         return requestAttributes.getResponse();
     }
 
+    /**
+     * 根据tokenKey检测和获取老师的信息
+     * @param tokenKey
+     * @return
+     */
     public Teacher getTeacherByTokenKey(String tokenKey) {
         String token = (String) redisUtil.get(Constants.User.TEACHER_KEY_TOKEN + tokenKey);
         if (token == null) {

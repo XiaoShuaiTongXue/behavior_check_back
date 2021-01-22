@@ -4,6 +4,7 @@ import com.behavior.pojo.Student;
 import com.behavior.pojo.Teacher;
 import com.behavior.reponse.ResponseResult;
 import com.behavior.services.ITeacherService;
+import com.behavior.utils.Constants;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
@@ -27,14 +28,11 @@ public class TeacherApi {
         return teacherService.doLogin(teacher);
     }
 
-    /**
-     * 签到
-     */
-    /**
-     * 开始签到，签到时间
-     *
-     * @return
-     */
+    @GetMapping("/course")
+    public ResponseResult getCourseName() {
+        return teacherService.getCourseName();
+    }
+
     @PostMapping("/sign")
     public ResponseResult beginSign(@RequestParam("courseName") String courseName,
                                     @RequestParam("signTime") int signTime,
@@ -59,23 +57,31 @@ public class TeacherApi {
         return teacherService.getSignInfo(page, size, courseName, date);
     }
 
-    @GetMapping("/sign/course")
-    public ResponseResult getCourseName() {
-        return teacherService.getCourseName();
-    }
-
     @GetMapping("/sign/date")
     public ResponseResult getCourseDate(@RequestParam("courseId") String courseId) {
         return teacherService.getCourseDate(courseId);
     }
 
     /**
-     * 行为检测
-     *
+     * 课上行为检测
      */
+    @PostMapping("/online/begin")
+    public ResponseResult beginOnlineBehavior(@RequestParam("courseName") String courseName) {
+        return teacherService.beginBehavior(courseName, Constants.Behavior.BEHAVIOR_ONLINE);
+    }
 
-    /**
-     * 行为检测提交
-     *
-     */
+    @PostMapping("/online/stop")
+    public ResponseResult stopOnlineBehavior(@RequestParam("courseName") String courseName) {
+        return teacherService.stopBehavior(courseName,Constants.Behavior.BEHAVIOR_ONLINE);
+    }
+
+    @PostMapping("/outline/behavior")
+    public ResponseResult beginOutlineBehavior(@RequestParam("courseName") String courseName) {
+        return teacherService.beginBehavior(courseName,Constants.Behavior.BEHAVIOR_OUTLINE);
+    }
+
+    @PostMapping("/outline/stop")
+    public ResponseResult stopOutlineBehavior(@RequestParam("courseName") String courseName) {
+        return teacherService.stopBehavior(courseName,Constants.Behavior.BEHAVIOR_OUTLINE);
+    }
 }

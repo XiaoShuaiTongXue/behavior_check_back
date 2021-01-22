@@ -16,4 +16,7 @@ public interface CourseDao extends JpaRepository<Course, String>, JpaSpecificati
     String findCourseIdByCourseNameAndTeacherId(String courseName, String teacherId);
 
     Course findCourseByCourseNameAndTeacherId(String courseName, String teacherId);
+
+    @Query(nativeQuery = true,value = "SELECT `class_id` FROM `tb_class_course` WHERE `course_id`  = ?")
+    List<String> findClassIdsByCourseId(String courseId);
 }

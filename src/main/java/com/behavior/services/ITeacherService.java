@@ -21,4 +21,8 @@ public interface ITeacherService {
     ResponseResult getSignInfo(int page, int size, String courseName, String date);
 
     ResponseResult getCourseDate(String courseId);
+
+    ResponseResult beginBehavior(String courseName,int type);
+
+    ResponseResult stopBehavior(String courseName,int type);
 }

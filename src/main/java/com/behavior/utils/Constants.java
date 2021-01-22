@@ -2,7 +2,7 @@ package com.behavior.utils;
 
 public interface Constants {
 
-    interface User{
+    interface User {
         String DEFAULT_AVATAR = "https://cdn.sunofbeaches.com/images/default_avatar.png";
         String DEFAULT_SEX_MALE = "男";
         String DEFAULT_SEX_FEMALE = "女";
@@ -13,6 +13,13 @@ public interface Constants {
         String TEACHER_KEY_RECORD = "teacher_key_record";
         String NORMAL_SIGN = "normal_sign";
         String LATER_SIGN = "later_sign";
+        String TEACHER_KEY_ONLINE = "teacher_key_online";
+        String TEACHER_KEY_OUTLINE = "teacher_key_outline";
+    }
+
+    interface Behavior{
+        int BEHAVIOR_ONLINE = 1;
+        int BEHAVIOR_OUTLINE = 2;
     }
 
     /**
@@ -21,7 +28,7 @@ public interface Constants {
      * 正常签到：2
      * 请假：4
      */
-    interface SignState{
+    interface SignState {
         int TRUANT_STATE = 0;
         int LATE_STATE = 1;
         int NORMAL_STATE = 2;
