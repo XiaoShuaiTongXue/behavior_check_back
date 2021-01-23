@@ -6,23 +6,13 @@ import com.behavior.dao.SchoolDao;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 
+import java.io.File;
+import java.util.List;
+import java.util.Map;
 import java.util.Scanner;
 
 public class FileUtil {
+    public static void writeOnlineBehavior(String behaviorId, Map<String,String> data){
 
-    @Value("${shuai.blog.file.save-path}")
-    public String filePath;
-
-    @Autowired
-    private  ClassesDao classesDao;
-
-    @Autowired
-    private GradeDao gradeDao;
-
-    @Autowired
-    private SchoolDao schoolDao;
-
-    public static String getFilePath(String classId,String name){
-        return null;
     }
 }

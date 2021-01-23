@@ -197,9 +197,9 @@ public class StudentServiceImp implements IStudentService {
         }
         String classId = student.getClassId();
         String studentId = student.getId();
-        Object behaviorId = redisUtil.get(Constants.User.CLASS_KEY_OUTLINE + classId);
+        Object behaviorId = redisUtil.get(Constants.User.CLASS_KEY + classId);
         if (behaviorId == null) {
-            return ResponseResult.FAILED("该班级未开始课上行为检测");
+            return ResponseResult.FAILED("该班级未开始课下行为检测");
         }
         OutlineStudent outlineStudentFromDb = outlineStudentDao
                 .findOutlineStudentByStudentIdAndBehaviorId(studentId, (String) behaviorId);
@@ -236,7 +236,7 @@ public class StudentServiceImp implements IStudentService {
         }
         String studentId = student.getId();
         String classId = student.getClassId();
-        Object behaviorId = redisUtil.get(Constants.User.CLASS_KEY_ONLINE + classId);
+        Object behaviorId = redisUtil.get(Constants.User.CLASS_KEY + classId);
         if (behaviorId == null) {
             return ResponseResult.FAILED("该班级未开始课上行为检测");
         }
