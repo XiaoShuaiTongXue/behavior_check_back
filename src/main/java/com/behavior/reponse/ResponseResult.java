@@ -60,7 +60,10 @@ public class ResponseResult {
         this.message = message;
         return this;
     }
-
+    public ResponseResult addPreMessage(String preMsg){
+        this.message = preMsg + message;
+        return this;
+    }
     public Object getData() {
         return data;
     }

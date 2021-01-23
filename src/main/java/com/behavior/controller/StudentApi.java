@@ -1,12 +1,12 @@
 package com.behavior.controller;
 
+import com.behavior.pojo.OnlineStudent;
+import com.behavior.pojo.OutlineStudent;
 import com.behavior.pojo.Student;
 import com.behavior.reponse.ResponseResult;
 import com.behavior.services.IStudentService;
-import io.swagger.annotations.Api;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
-import org.springframework.web.multipart.MultipartFile;
 
 @CrossOrigin
 @RestController
@@ -14,39 +14,49 @@ import org.springframework.web.multipart.MultipartFile;
 public class StudentApi {
 
     @Autowired
-    private IStudentService userService;
+    private IStudentService studentService;
 
     @PostMapping("/register")
     public ResponseResult register(@RequestBody Student student) {
-        return userService.register(student);
+        return studentService.register(student);
     }
 
     @PostMapping("/login")
     public ResponseResult doLogin(@RequestBody Student student) {
-        return userService.doLogin(student);
+        return studentService.doLogin(student);
     }
 
     @PostMapping("/face")
     public ResponseResult enterFaceCsv(@RequestParam("student_num") String studentNum,
                                        @RequestParam("face_csv") String faceCsv) {
-        return userService.enterFaceCsv(studentNum, faceCsv);
+        return studentService.enterFaceCsv(studentNum, faceCsv);
     }
 
     @GetMapping("/face_csv")
     public ResponseResult getFaceCsv(){
-        return userService.getFaceCsv();
+        return studentService.getFaceCsv();
     }
 
     @GetMapping("/signs/{page}/{size}")
     public ResponseResult getSigns(@PathVariable("page") int page,
                                    @PathVariable("size") int size,
                                    @RequestParam(value = "state", required = false) String state) {
-        return userService.gesSigns(page,size,state);
+        return studentService.gesSigns(page,size,state);
     }
 
 
-    @GetMapping("/sign")
+    @PostMapping("/sign")
     public ResponseResult sign(@RequestParam("signStudentId")String signStudentId){
-        return userService.sign(signStudentId);
+        return studentService.sign(signStudentId);
+    }
+
+    @PostMapping("/online/behavior")
+    public ResponseResult postOnlineBehavior(@RequestBody OnlineStudent onlineStudent){
+        return studentService.postOnlineBehavior(onlineStudent);
+    }
+
+    @PostMapping("/outline/behavior")
+    public ResponseResult postOutlineBehavior(@RequestBody OutlineStudent outlineStudent){
+        return studentService.postOutlineBehavior(outlineStudent);
     }
 }

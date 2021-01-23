@@ -13,8 +13,10 @@ public interface Constants {
         String TEACHER_KEY_RECORD = "teacher_key_record";
         String NORMAL_SIGN = "normal_sign";
         String LATER_SIGN = "later_sign";
-        String TEACHER_KEY_ONLINE = "teacher_key_online";
-        String TEACHER_KEY_OUTLINE = "teacher_key_outline";
+        String BEHAVIOR_KEY_ONLINE = "behavior_key_online";
+        String BEHAVIOR_KEY_OUTLINE = "behavior_key_outline";
+        String CLASS_KEY_ONLINE = "class_key_online";
+        String CLASS_KEY_OUTLINE = "class_key_outline";
     }
 
     interface Behavior{

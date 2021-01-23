@@ -13,4 +13,6 @@ public interface OutlineCourseDao extends JpaRepository<OutlineCourse,String>, J
     @Modifying
     @Query(nativeQuery = true,value = "UPDATE `tb_behavior_outline_course` SET `behavior_end_time` = ? WHERE `id` = ?")
     int updateEndTimeById (Date endTime, String id);
+
+    OutlineCourse findOutlineCourseById(String id);
 }

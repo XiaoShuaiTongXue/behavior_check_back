@@ -23,11 +23,11 @@ public class OnlineCourse {
   	@Column(name = "course_id" )
 	private String courseId;
   	@Column(name = "sleep_count" )
-	private long sleepCount;
-  	@Column(name = "speak_count" )
-	private long speakCount;
-  	@Column(name = "out_count" )
-	private long outCount;
+	private int sleepCount;
+  	@Column(name = "talk_count" )
+	private int talkCount;
+  	@Column(name = "leave_count" )
+	private int leaveCount;
 
 
 	public String getId() {
@@ -66,30 +66,30 @@ public class OnlineCourse {
 	}
 
 
-	public long getSleepCount() {
+	public int getSleepCount() {
 		return sleepCount;
 	}
 
-	public void setSleepCount(long sleepCount) {
-		this.sleepCount = sleepCount;
+	public void addSleepCount(int sleepCount) {
+		this.sleepCount += sleepCount;
 	}
 
 
-	public long getSpeakCount() {
-		return speakCount;
+	public int getTalkCount() {
+		return talkCount;
 	}
 
-	public void setSpeakCount(long speakCount) {
-		this.speakCount = speakCount;
+	public void addTalkCount(int speakCount) {
+		this.talkCount += speakCount;
 	}
 
 
-	public long getOutCount() {
-		return outCount;
+	public int getLeaveCount() {
+		return leaveCount;
 	}
 
-	public void setOutCount(long outCount) {
-		this.outCount = outCount;
+	public void addLeaveCount(int outCount) {
+		this.leaveCount += outCount;
 	}
 
 }

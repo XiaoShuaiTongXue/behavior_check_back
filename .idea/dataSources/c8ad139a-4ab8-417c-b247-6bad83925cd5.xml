@@ -797,12 +797,12 @@ SELECT|sys.sys_config
       <Comment>睡觉次数</Comment>
       <DataType>int(10)|0s</DataType>
     </column>
-    <column id="252" parent="234" name="speak_count">
+    <column id="252" parent="234" name="talk_count">
       <Position>6</Position>
       <Comment>说话次数</Comment>
       <DataType>int(10)|0s</DataType>
     </column>
-    <column id="253" parent="234" name="out_count">
+    <column id="253" parent="234" name="leave_count">
       <Position>7</Position>
       <Comment>旷课次数</Comment>
       <DataType>int(10)|0s</DataType>
@@ -844,19 +844,19 @@ SELECT|sys.sys_config
     <column id="260" parent="235" name="sleep_count">
       <Position>4</Position>
       <Comment>睡觉次数</Comment>
-      <DataType>float|0s</DataType>
+      <DataType>int(10)|0s</DataType>
       <NotNull>1</NotNull>
     </column>
     <column id="261" parent="235" name="talk_count">
       <Position>5</Position>
       <Comment>说话次数</Comment>
-      <DataType>float|0s</DataType>
+      <DataType>int(10)|0s</DataType>
       <NotNull>1</NotNull>
     </column>
     <column id="262" parent="235" name="leave_count">
       <Position>6</Position>
       <Comment>旷课次数</Comment>
-      <DataType>float|0s</DataType>
+      <DataType>int(10)|0s</DataType>
       <NotNull>1</NotNull>
     </column>
     <column id="263" parent="235" name="file_post">

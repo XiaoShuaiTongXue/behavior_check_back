@@ -23,15 +23,15 @@ public class OutlineCourse {
 	@JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss", timezone = "GMT+8")
 	private Date behaviorEndTime;
   	@Column(name = "write_count" )
-	private long writeCount;
+	private int writeCount;
   	@Column(name = "put_bag_count" )
-	private long putBagCount;
+	private int putBagCount;
   	@Column(name = "phone_count" )
-	private long phoneCount;
+	private int phoneCount;
   	@Column(name = "look_note_count" )
-	private long lookNoteCount;
+	private int lookNoteCount;
   	@Column(name = "pass_note_count" )
-	private long passNoteCount;
+	private int passNoteCount;
 
 
 	public String getId() {
@@ -69,49 +69,43 @@ public class OutlineCourse {
 		this.behaviorEndTime = behaviorEndTime;
 	}
 
-
-	public long getWriteCount() {
+	public int getWriteCount() {
 		return writeCount;
 	}
 
-	public void setWriteCount(long writeCount) {
-		this.writeCount = writeCount;
+	public void addWriteCount(int writeCount) {
+		this.writeCount += writeCount;
 	}
 
-
-	public long getPutBagCount() {
+	public int getPutBagCount() {
 		return putBagCount;
 	}
 
-	public void setPutBagCount(long putBagCount) {
-		this.putBagCount = putBagCount;
+	public void addPutBagCount(int putBagCount) {
+		this.putBagCount += putBagCount;
 	}
 
-
-	public long getPhoneCount() {
+	public int getPhoneCount() {
 		return phoneCount;
 	}
 
-	public void setPhoneCount(long phoneCount) {
-		this.phoneCount = phoneCount;
+	public void addPhoneCount(int phoneCount) {
+		this.phoneCount += phoneCount;
 	}
 
-
-	public long getLookNoteCount() {
+	public int getLookNoteCount() {
 		return lookNoteCount;
 	}
 
-	public void setLookNoteCount(long lookNoteCount) {
-		this.lookNoteCount = lookNoteCount;
+	public void addLookNoteCount(int lookNoteCount) {
+		this.lookNoteCount += lookNoteCount;
 	}
 
-
-	public long getPassNoteCount() {
+	public int getPassNoteCount() {
 		return passNoteCount;
 	}
 
-	public void setPassNoteCount(long passNoteCount) {
-		this.passNoteCount = passNoteCount;
+	public void addPassNoteCount(int passNoteCount) {
+		this.passNoteCount += passNoteCount;
 	}
-
 }

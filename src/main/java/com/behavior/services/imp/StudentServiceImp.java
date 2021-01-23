@@ -26,6 +26,7 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import javax.transaction.Transactional;
 import java.io.File;
+import java.util.Date;
 
 @Service
 @Transactional
@@ -49,6 +50,11 @@ public class StudentServiceImp implements IStudentService {
     @Autowired
     private SignStudentDao signStudentDao;
 
+    @Autowired
+    private OnlineStudentDao onlineStudentDao;
+
+    @Autowired
+    private OutlineStudentDao outlineStudentDao;
 
     @Value("${shuai.blog.file.save-path}")
     public String basePath;
@@ -61,7 +67,6 @@ public class StudentServiceImp implements IStudentService {
         String studentNumber = student.getStudentNumber();
         String sex = student.getSex();
         String classId = student.getClassId();
-        String faceCsv = student.getClassName();
         if (TextUtil.isEmpty(studentNumber)) {
             return ResponseResult.FAILED("学号不能为空");
         }
@@ -149,7 +154,7 @@ public class StudentServiceImp implements IStudentService {
                 return studentPre;
             }
         }, PageUtil.getPageable(page, size, Sort.by(Sort.Direction.DESC, "out_end_time")));
-        return ResponseResult.SUCCESS("学生个人签到信息查询成功");
+        return ResponseResult.SUCCESS("学生个人签到信息查询成功").setData(signStudents);
     }
 
     @Override
@@ -164,7 +169,7 @@ public class StudentServiceImp implements IStudentService {
             return ResponseResult.SUCCESS("签到成功");
         }
         if (redisUtil.get(Constants.User.LATER_SIGN + signRecordId) != null) {
-            signStudentDao.updateStateById(Constants.SignState.LATE_STATE,signStudentId);
+            signStudentDao.updateStateById(Constants.SignState.LATE_STATE, signStudentId);
             return ResponseResult.SUCCESS("签到成功,你已经迟到，但是没有超过旷课时间");
         }
         return ResponseResult.FAILED("无法签到");
@@ -184,8 +189,77 @@ public class StudentServiceImp implements IStudentService {
     }
 
     @Override
+    public ResponseResult postOutlineBehavior(OutlineStudent outlineStudent) {
+        Student student = checkStudent();
+        if (student == null) {
+            return ResponseResult.FAILED("用户未登录，请登录后重试");
+        }
+        String classId = student.getClassId();
+        String studentId = student.getId();
+        Object behaviorId = redisUtil.get(Constants.User.CLASS_KEY_OUTLINE + classId);
+        if (behaviorId == null) {
+            return ResponseResult.FAILED("该班级未开始课上行为检测");
+        }
+        OutlineStudent outlineStudentFromDb = outlineStudentDao
+                .findOutlineStudentByStudentIdAndBehaviorId(studentId, (String) behaviorId);
+        int lookNoteCount = outlineStudent.getLookNoteCount();
+        int phoneCount = outlineStudent.getPhoneCount();
+        int writeCount = outlineStudent.getWriteCount();
+        int passNoteCount = outlineStudent.getPassNoteCount();
+        int putBagCount = outlineStudent.getPutBagCount();
+        if (lookNoteCount > 0) {
+            outlineStudentFromDb.addLookNoteCount(lookNoteCount);
+        }
+        if (phoneCount > 0) {
+            outlineStudentFromDb.addPhoneCount(phoneCount);
+        }
+        if (writeCount > 0) {
+            outlineStudentFromDb.addWriteCount(writeCount);
+        }
+        if (passNoteCount > 0) {
+            outlineStudentFromDb.addPassNoteCount(passNoteCount);
+        }
+        if (putBagCount > 0) {
+            outlineStudentFromDb.addPutBagCount(putBagCount);
+        }
+        outlineStudentFromDb.setPostTime(new Date());
+        outlineStudentDao.save(outlineStudentFromDb);
+        return ResponseResult.SUCCESS("线下学生行为更新成功");
+    }
+
+    @Override
+    public ResponseResult postOnlineBehavior(OnlineStudent onlineStudent) {
+        Student student = checkStudent();
+        if (student == null) {
+            return ResponseResult.FAILED("用户未登录，请登录后重试");
+        }
+        String studentId = student.getId();
+        String classId = student.getClassId();
+        Object behaviorId = redisUtil.get(Constants.User.CLASS_KEY_ONLINE + classId);
+        if (behaviorId == null) {
+            return ResponseResult.FAILED("该班级未开始课上行为检测");
+        }
+        OnlineStudent onlineStudentFromDb = onlineStudentDao
+                .findOnlineStudentByStudentIdAndBehaviorId(studentId, (String) behaviorId);
+        int sleepCount = onlineStudent.getSleepCount();
+        int leaveCount = onlineStudent.getLeaveCount();
+        int talkCount = onlineStudent.getTalkCount();
+        if (sleepCount > 0) {
+            onlineStudentFromDb.addSleepCount(sleepCount);
+        }
+        if (leaveCount > 0) {
+            onlineStudentFromDb.addLeaveCount(leaveCount);
+        }
+        if (talkCount > 0) {
+            onlineStudentFromDb.addTalkCount(talkCount);
+        }
+        onlineStudentFromDb.setPostTime(new Date());
+        onlineStudentDao.save(onlineStudentFromDb);
+        return ResponseResult.SUCCESS("线上学生行为更新成功");
+    }
+
+    @Override
     public Student checkStudent() {
-        HttpServletResponse response = getServletResponse();
         HttpServletRequest request = getServletRequest();
         String tokenKey = CookieUtil.getCookie(request, Constants.User.STUDENT_COOKIE_TOKEN_KEY);
         Student student = getStudentByTokenKey(tokenKey);

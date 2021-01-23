@@ -10,7 +10,7 @@ import java.util.Date;
 
 @Entity
 @Table ( name ="tb_behavior_online_student" )
-public class BehaviorOnlineStudent {
+public class OnlineStudent {
 
   	@Id
 	private String id;
@@ -22,11 +22,11 @@ public class BehaviorOnlineStudent {
 	@JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss", timezone = "GMT+8")
 	private Date postTime;
 	@Column(name = "sleep_count" )
-	private double sleepCount;
+	private int sleepCount;
 	@Column(name = "talk_count" )
-	private double talkCount;
+	private int talkCount;
 	@Column(name = "leave_count" )
-	private double leaveCount;
+	private int leaveCount;
 	@Column(name = "file_post" )
 	private String filePost;
 
@@ -58,30 +58,30 @@ public class BehaviorOnlineStudent {
 	}
 
 
-	public double getSleepCount() {
+	public int getSleepCount() {
 		return sleepCount;
 	}
 
-	public void setSleepCount(double sleepCount) {
-		this.sleepCount = sleepCount;
+	public void addSleepCount(int sleepCount) {
+		this.sleepCount += sleepCount;
 	}
 
 
-	public double getTalkCount() {
+	public int getTalkCount() {
 		return talkCount;
 	}
 
-	public void setTalkCount(double talkCount) {
-		this.talkCount = talkCount;
+	public void addTalkCount(int talkCount) {
+		this.talkCount += talkCount;
 	}
 
 
-	public double getLeaveCount() {
+	public int getLeaveCount() {
 		return leaveCount;
 	}
 
-	public void setLeaveCount(double leaveCount) {
-		this.leaveCount = leaveCount;
+	public void addLeaveCount(int leaveCount) {
+		this.leaveCount += leaveCount;
 	}
 
 

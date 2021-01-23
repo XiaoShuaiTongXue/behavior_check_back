@@ -56,10 +56,10 @@ public class TeacherServiceImp implements ITeacherService {
     private OutlineCourseDao outlineCourseDao;
 
     @Autowired
-    private BehaviorOnlineStudentDao behaviorOnlineStudentDao;
+    private OnlineStudentDao onlineStudentDao;
 
     @Autowired
-    private BehaviorOutlineStudentDao behaviorOutlineStudentDao;
+    private OutlineStudentDao outlineStudentDao;
     /**
      * 注册
      * @param teacher 注册老师信息
@@ -276,7 +276,7 @@ public class TeacherServiceImp implements ITeacherService {
         List<String> studentIds = studentDao.findIdsByClassIds(classIds);
         String behaviorId = String.valueOf(idWorker.nextId());
         if (type == Constants.Behavior.BEHAVIOR_ONLINE) {
-            if (redisUtil.get(Constants.User.TEACHER_KEY_ONLINE + courseId) != null) {
+            if (redisUtil.get(Constants.User.BEHAVIOR_KEY_ONLINE + courseId) != null) {
                 return ResponseResult.FAILED("该课程已经开启线上行为检测，无法重复开启");
             }
             OnlineCourse onlineCourse = new OnlineCourse();
@@ -285,16 +285,19 @@ public class TeacherServiceImp implements ITeacherService {
             onlineCourse.setCourseId(courseId);
             onlineCourseDao.save(onlineCourse);
             for (String studentId : studentIds) {
-                BehaviorOnlineStudent behaviorOnlineStudent = new BehaviorOnlineStudent();
-                behaviorOnlineStudent.setId(String.valueOf(idWorker.nextId()));
-                behaviorOnlineStudent.setStudentId(studentId);
-                behaviorOnlineStudent.setBehaviorId(behaviorId);
-                behaviorOnlineStudent.setPostTime(new Date());
-                behaviorOnlineStudentDao.save(behaviorOnlineStudent);
+                OnlineStudent onlineStudent = new OnlineStudent();
+                onlineStudent.setId(String.valueOf(idWorker.nextId()));
+                onlineStudent.setStudentId(studentId);
+                onlineStudent.setBehaviorId(behaviorId);
+                onlineStudent.setPostTime(new Date());
+                onlineStudentDao.save(onlineStudent);
             }
-            redisUtil.set(Constants.User.TEACHER_KEY_ONLINE + courseId, behaviorId);
+            for (String classId : classIds) {
+                redisUtil.set(Constants.User.CLASS_KEY_ONLINE+classId,behaviorId,Constants.TimeValueByS.HOUR_2);
+            }
+            redisUtil.set(Constants.User.BEHAVIOR_KEY_ONLINE + courseId, behaviorId,Constants.TimeValueByS.HOUR_2);
         }else if (type == Constants.Behavior.BEHAVIOR_OUTLINE){
-            if (redisUtil.get(Constants.User.TEACHER_KEY_OUTLINE + courseId) != null) {
+            if (redisUtil.get(Constants.User.BEHAVIOR_KEY_OUTLINE + courseId) != null) {
                 return ResponseResult.FAILED("该课程已经开启线下行为检测，无法重复开启");
             }
             OutlineCourse outlineCourse = new OutlineCourse();
@@ -303,14 +306,17 @@ public class TeacherServiceImp implements ITeacherService {
             outlineCourse.setCourseId(courseId);
             outlineCourseDao.save(outlineCourse);
             for (String studentId : studentIds) {
-                BehaviorOutlineStudent behaviorOutlineStudent = new BehaviorOutlineStudent();
-                behaviorOutlineStudent.setId(String.valueOf(idWorker.nextId()));
-                behaviorOutlineStudent.setStudentId(studentId);
-                behaviorOutlineStudent.setBehaviorId(behaviorId);
-                behaviorOutlineStudent.setPostTime(new Date());
-                behaviorOutlineStudentDao.save(behaviorOutlineStudent);
+                OutlineStudent outlineStudent = new OutlineStudent();
+                outlineStudent.setId(String.valueOf(idWorker.nextId()));
+                outlineStudent.setStudentId(studentId);
+                outlineStudent.setBehaviorId(behaviorId);
+                outlineStudent.setPostTime(new Date());
+                outlineStudentDao.save(outlineStudent);
             }
-            redisUtil.set(Constants.User.TEACHER_KEY_OUTLINE + courseId, behaviorId);
+            for (String classId : classIds) {
+                redisUtil.set(Constants.User.CLASS_KEY_OUTLINE+classId,behaviorId,Constants.TimeValueByS.HOUR_2);
+            }
+            redisUtil.set(Constants.User.BEHAVIOR_KEY_OUTLINE + courseId, behaviorId,Constants.TimeValueByS.HOUR_2);
         }else {
             return ResponseResult.FAILED("类型错误");
         }
@@ -325,22 +331,68 @@ public class TeacherServiceImp implements ITeacherService {
             return ResponseResult.FAILED("当前账号未登录，请登录后重试");
         }
         String courseId = courseDao.findCourseIdByCourseNameAndTeacherId(courseName, teacher.getId());
+        String courseInfo = courseName+"-"+teacher.getName()+":";
+        return stopBehaviorCheck(type, courseId).addPreMessage(courseInfo);
+    }
+
+    /**
+     * 停止行为检测，并刷新数据库和更新redis
+     * @param type
+     * @param courseId
+     * @return
+     */
+    private ResponseResult stopBehaviorCheck(int type, String courseId) {
+        List<String> classIds = courseDao.findClassIdsByCourseId(courseId);
         if (type == Constants.Behavior.BEHAVIOR_ONLINE){
-            String onlineBehaviorId = (String) redisUtil.get(Constants.User.TEACHER_KEY_ONLINE + courseId);
+            String onlineBehaviorId = (String) redisUtil.get(Constants.User.BEHAVIOR_KEY_ONLINE + courseId);
             if (TextUtil.isEmpty(onlineBehaviorId)) {
-                return ResponseResult.FAILED(teacher.getName()+"的"+courseName+"课程未开启线上行为检测");
+                return ResponseResult.FAILED("未开启线上行为检测");
             }
             onlineCourseDao.updateEndTimeById(new Date(),onlineBehaviorId);
-            redisUtil.del(Constants.User.TEACHER_KEY_ONLINE + courseId);
+            sumOnlineBehavior(onlineBehaviorId);
+            for (String classId : classIds) {
+                redisUtil.del(Constants.User.CLASS_KEY_ONLINE+classId);
+            }
+            redisUtil.del(Constants.User.BEHAVIOR_KEY_ONLINE + courseId);
         }else if(type == Constants.Behavior.BEHAVIOR_OUTLINE){
-            String outlineBehaviorId = (String) redisUtil.get(Constants.User.TEACHER_KEY_OUTLINE + courseId);
+            String outlineBehaviorId = (String) redisUtil.get(Constants.User.BEHAVIOR_KEY_OUTLINE + courseId);
             if (TextUtil.isEmpty(outlineBehaviorId)) {
-                return ResponseResult.FAILED(teacher.getName()+"的"+courseName+"课程未开启线下行为检测");
+                return ResponseResult.FAILED("未开启线下行为检测");
             }
             outlineCourseDao.updateEndTimeById(new Date(),outlineBehaviorId);
-            redisUtil.del(Constants.User.TEACHER_KEY_OUTLINE + courseId);
+            sumOutlineBehavior(outlineBehaviorId);
+            for (String classId : classIds) {
+                redisUtil.del(Constants.User.CLASS_KEY_OUTLINE+classId);
+            }
+            redisUtil.del(Constants.User.BEHAVIOR_KEY_OUTLINE + courseId);
         }
-        return ResponseResult.SUCCESS(teacher.getName()+"-"+courseName+"课程: 行为检测结束");
+        return ResponseResult.SUCCESS("行为检测结束");
+    }
+
+    private void sumOnlineBehavior(String onlineBehaviorId) {
+        int sumLeaveCount = onlineStudentDao.getSumLeaveCount(onlineBehaviorId);
+        int sumSleepCount = onlineStudentDao.getSumSleepCount(onlineBehaviorId);
+        int sumTalkCount = onlineStudentDao.getSumTalkCount(onlineBehaviorId);
+        OnlineCourse onlineCourseFromDb = onlineCourseDao.findOnlineCourseById(onlineBehaviorId);
+        onlineCourseFromDb.addTalkCount(sumTalkCount);
+        onlineCourseFromDb.addSleepCount(sumSleepCount);
+        onlineCourseFromDb.addLeaveCount(sumLeaveCount);
+        onlineCourseDao.save(onlineCourseFromDb);
+    }
+
+    private void sumOutlineBehavior(String outlineBehaviorId) {
+        int sumLookNoteCount = outlineStudentDao.getSumLookNoteCount(outlineBehaviorId);
+        int sumPassNoteCount = outlineStudentDao.getSumPassNoteCount(outlineBehaviorId);
+        int sumPhoneCount = outlineStudentDao.getSumPhoneCount(outlineBehaviorId);
+        int sumWriteCount = outlineStudentDao.getSumWriteCount(outlineBehaviorId);
+        int sumPutBagCount = outlineStudentDao.getSumPutBagCount(outlineBehaviorId);
+        OutlineCourse outlineCourseFromDb = outlineCourseDao.findOutlineCourseById(outlineBehaviorId);
+        outlineCourseFromDb.addLookNoteCount(sumLookNoteCount);
+        outlineCourseFromDb.addPassNoteCount(sumPassNoteCount);
+        outlineCourseFromDb.addPhoneCount(sumPhoneCount);
+        outlineCourseFromDb.addWriteCount(sumWriteCount);
+        outlineCourseFromDb.addPutBagCount(sumPutBagCount);
+        outlineCourseDao.save(outlineCourseFromDb);
     }
 
     /**
@@ -355,7 +407,6 @@ public class TeacherServiceImp implements ITeacherService {
         redisUtil.set(Constants.User.TEACHER_KEY_TOKEN + tokenKey, token, Constants.TimeValueByS.HOUR_2);
         CookieUtil.setUpCookie(response, Constants.User.TEACHER_COOKIE_TOKEN_KEY, tokenKey);
         return tokenKey;
-
     }
 
     private HttpServletRequest getServletRequest() {

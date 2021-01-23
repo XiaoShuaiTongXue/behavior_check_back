@@ -14,4 +14,6 @@ public interface OnlineCourseDao extends JpaRepository<OnlineCourse,String>, Jpa
     @Query(nativeQuery = true,value = "UPDATE `tb_behavior_online_course` SET `behavior_end_time` = ? WHERE `id` = ?")
     int updateEndTimeById (Date endTime,String id);
 
+    OnlineCourse findOnlineCourseById(String id);
+
 }
