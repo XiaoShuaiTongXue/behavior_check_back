@@ -18,4 +18,6 @@ public interface OnlineStudentDao extends JpaRepository<OnlineStudent, String>, 
     @Query(nativeQuery = true, value = "SELECT SUM(`leave_count`) FROM `tb_behavior_online_student` WHERE `behavior_id` = ?")
     int getSumLeaveCount(String behaviorId);
 
+    @Query(nativeQuery = true, value = "SELECT SUM(`out_count`) FROM `tb_behavior_online_student` WHERE `behavior_id` = ?")
+    int getSumOutCount(String behaviorId);
 }

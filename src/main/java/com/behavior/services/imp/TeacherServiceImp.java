@@ -373,10 +373,12 @@ public class TeacherServiceImp implements ITeacherService {
         int sumLeaveCount = onlineStudentDao.getSumLeaveCount(onlineBehaviorId);
         int sumSleepCount = onlineStudentDao.getSumSleepCount(onlineBehaviorId);
         int sumTalkCount = onlineStudentDao.getSumTalkCount(onlineBehaviorId);
+        int sumOutCount = onlineStudentDao.getSumOutCount(onlineBehaviorId);
         OnlineCourse onlineCourseFromDb = onlineCourseDao.findOnlineCourseById(onlineBehaviorId);
         onlineCourseFromDb.addTalkCount(sumTalkCount);
         onlineCourseFromDb.addSleepCount(sumSleepCount);
         onlineCourseFromDb.addLeaveCount(sumLeaveCount);
+        onlineCourseFromDb.addOutCount(sumOutCount);
         onlineCourseDao.save(onlineCourseFromDb);
     }
 

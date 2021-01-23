@@ -123,19 +123,32 @@ public class StudentServiceImp implements IStudentService {
         return ResponseResult.Get(ResponseState.LOGIN_IN_SUCCESS);
     }
 
-    @Override
-    public ResponseResult enterFaceCsv(String studentNum, String faceCsv) {
-        Student studentFromDb = studentDao.findUserByStudentNumber(studentNum);
-        if (studentFromDb == null) {
-            return ResponseResult.FAILED("用户学号错误");
-        }
-        if (faceCsv == null) {
-            return ResponseResult.FAILED("人脸数据为空");
-        }
-        studentFromDb.setFaceCsv(faceCsv);
-        studentDao.save(studentFromDb);
-        return ResponseResult.SUCCESS("人脸数据录入失败");
-    }
+//    @Override
+//    public ResponseResult enterFaceCsv(String studentNum, String faceCsv) {
+//        Student studentFromDb = studentDao.findUserByStudentNumber(studentNum);
+//        if (studentFromDb == null) {
+//            return ResponseResult.FAILED("用户学号错误");
+//        }
+//        if (faceCsv == null) {
+//            return ResponseResult.FAILED("人脸数据为空");
+//        }
+//        studentFromDb.setFaceCsv(faceCsv);
+//        studentDao.save(studentFromDb);
+//        return ResponseResult.SUCCESS("人脸数据录入失败");
+//    }
+//
+//        @Override
+//    public ResponseResult getFaceCsv() {
+//        Student student = checkStudent();
+//        if (student == null) {
+//            return ResponseResult.FAILED("用户未登录，请登录后重试");
+//        }
+//        String faceCsv = studentDao.findFaceCsvByStudentId(student.getId());
+//        if (TextUtil.isEmpty(faceCsv)) {
+//            return ResponseResult.FAILED("人脸信息未录入，请先录入人脸数据");
+//        }
+//        return ResponseResult.SUCCESS("人脸信息查询成功").setData(faceCsv);
+//    }
 
     @Override
     public ResponseResult gesSigns(int page, int size, String state) {
@@ -175,18 +188,6 @@ public class StudentServiceImp implements IStudentService {
         return ResponseResult.FAILED("无法签到");
     }
 
-    @Override
-    public ResponseResult getFaceCsv() {
-        Student student = checkStudent();
-        if (student == null) {
-            return ResponseResult.FAILED("用户未登录，请登录后重试");
-        }
-        String faceCsv = studentDao.findFaceCsvByStudentId(student.getId());
-        if (TextUtil.isEmpty(faceCsv)) {
-            return ResponseResult.FAILED("人脸信息未录入，请先录入人脸数据");
-        }
-        return ResponseResult.SUCCESS("人脸信息查询成功").setData(faceCsv);
-    }
 
     @Override
     public ResponseResult postOutlineBehavior(OutlineStudent outlineStudent) {
@@ -244,6 +245,7 @@ public class StudentServiceImp implements IStudentService {
         int sleepCount = onlineStudent.getSleepCount();
         int leaveCount = onlineStudent.getLeaveCount();
         int talkCount = onlineStudent.getTalkCount();
+        int outCount = onlineStudent.getOutCount();
         if (sleepCount > 0) {
             onlineStudentFromDb.addSleepCount(sleepCount);
         }
@@ -252,6 +254,9 @@ public class StudentServiceImp implements IStudentService {
         }
         if (talkCount > 0) {
             onlineStudentFromDb.addTalkCount(talkCount);
+        }
+        if (outCount > 0) {
+            onlineStudentFromDb.addOutCount(outCount);
         }
         onlineStudentFromDb.setPostTime(new Date());
         onlineStudentDao.save(onlineStudentFromDb);

@@ -26,16 +26,16 @@ public class StudentApi {
         return studentService.doLogin(student);
     }
 
-    @PostMapping("/face")
-    public ResponseResult enterFaceCsv(@RequestParam("student_num") String studentNum,
-                                       @RequestParam("face_csv") String faceCsv) {
-        return studentService.enterFaceCsv(studentNum, faceCsv);
-    }
-
-    @GetMapping("/face_csv")
-    public ResponseResult getFaceCsv(){
-        return studentService.getFaceCsv();
-    }
+//    @PostMapping("/face")
+//    public ResponseResult enterFaceCsv(@RequestParam("student_num") String studentNum,
+//                                       @RequestParam("face_csv") String faceCsv) {
+//        return studentService.enterFaceCsv(studentNum, faceCsv);
+//    }
+//
+//    @GetMapping("/face_csv")
+//    public ResponseResult getFaceCsv(){
+//        return studentService.getFaceCsv();
+//    }
 
     @GetMapping("/signs/{page}/{size}")
     public ResponseResult getSigns(@PathVariable("page") int page,

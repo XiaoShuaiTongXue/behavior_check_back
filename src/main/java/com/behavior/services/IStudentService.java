@@ -13,14 +13,9 @@ public interface IStudentService {
 
     Student checkStudent();
 
-
-    ResponseResult enterFaceCsv(String studentNum,String faceCsv);
-
     ResponseResult gesSigns(int page,int size,String state);
 
     ResponseResult sign(String signStudentId);
-
-    ResponseResult getFaceCsv();
 
     ResponseResult postOutlineBehavior(OutlineStudent outlineStudent);
 

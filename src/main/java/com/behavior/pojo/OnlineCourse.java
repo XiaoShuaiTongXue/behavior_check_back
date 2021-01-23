@@ -28,7 +28,16 @@ public class OnlineCourse {
 	private int talkCount;
   	@Column(name = "leave_count" )
 	private int leaveCount;
+  	@Column(name = "out_count")
+	private int outCount;
 
+	public int getOutCount() {
+		return outCount;
+	}
+
+	public void addOutCount(int outCount) {
+		this.outCount += outCount;
+	}
 
 	public String getId() {
 		return id;

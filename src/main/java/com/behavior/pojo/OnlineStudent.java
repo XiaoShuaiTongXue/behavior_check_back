@@ -9,97 +9,106 @@ import javax.persistence.Table;
 import java.util.Date;
 
 @Entity
-@Table ( name ="tb_behavior_online_student" )
+@Table(name = "tb_behavior_online_student")
 public class OnlineStudent {
 
-  	@Id
-	private String id;
-  	@Column(name = "student_id" )
-	private String studentId;
-  	@Column(name = "behavior_id" )
-	private String behaviorId;
-	@Column(name = "post_time" )
-	@JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss", timezone = "GMT+8")
-	private Date postTime;
-	@Column(name = "sleep_count" )
-	private int sleepCount;
-	@Column(name = "talk_count" )
-	private int talkCount;
-	@Column(name = "leave_count" )
-	private int leaveCount;
-	@Column(name = "file_post" )
-	private String filePost;
+    @Id
+    private String id;
+    @Column(name = "student_id")
+    private String studentId;
+    @Column(name = "behavior_id")
+    private String behaviorId;
+    @Column(name = "post_time")
+    @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss", timezone = "GMT+8")
+    private Date postTime;
+    @Column(name = "sleep_count")
+    private int sleepCount;
+    @Column(name = "talk_count")
+    private int talkCount;
+    @Column(name = "leave_count")
+    private int leaveCount;
+    @Column(name = "out_count")
+    private int outCount;
+    @Column(name = "file_post")
+    private String filePost;
 
 
-	public String getId() {
-		return id;
-	}
+    public String getId() {
+        return id;
+    }
 
-	public void setId(String id) {
-		this.id = id;
-	}
-
-
-	public String getStudentId() {
-		return studentId;
-	}
-
-	public void setStudentId(String studentId) {
-		this.studentId = studentId;
-	}
+    public void setId(String id) {
+        this.id = id;
+    }
 
 
-	public String getBehaviorId() {
-		return behaviorId;
-	}
+    public String getStudentId() {
+        return studentId;
+    }
 
-	public void setBehaviorId(String behaviorId) {
-		this.behaviorId = behaviorId;
-	}
-
-
-	public int getSleepCount() {
-		return sleepCount;
-	}
-
-	public void addSleepCount(int sleepCount) {
-		this.sleepCount += sleepCount;
-	}
+    public void setStudentId(String studentId) {
+        this.studentId = studentId;
+    }
 
 
-	public int getTalkCount() {
-		return talkCount;
-	}
+    public String getBehaviorId() {
+        return behaviorId;
+    }
 
-	public void addTalkCount(int talkCount) {
-		this.talkCount += talkCount;
-	}
-
-
-	public int getLeaveCount() {
-		return leaveCount;
-	}
-
-	public void addLeaveCount(int leaveCount) {
-		this.leaveCount += leaveCount;
-	}
+    public void setBehaviorId(String behaviorId) {
+        this.behaviorId = behaviorId;
+    }
 
 
-	public String getFilePost() {
-		return filePost;
-	}
+    public int getSleepCount() {
+        return sleepCount;
+    }
 
-	public void setFilePost(String filePost) {
-		this.filePost = filePost;
-	}
+    public void addSleepCount(int sleepCount) {
+        this.sleepCount += sleepCount;
+    }
 
 
-	public Date getPostTime() {
-		return postTime;
-	}
+    public int getTalkCount() {
+        return talkCount;
+    }
 
-	public void setPostTime(Date postTime) {
-		this.postTime = postTime;
-	}
+    public void addTalkCount(int talkCount) {
+        this.talkCount += talkCount;
+    }
 
+
+    public int getLeaveCount() {
+        return leaveCount;
+    }
+
+    public void addLeaveCount(int leaveCount) {
+        this.leaveCount += leaveCount;
+    }
+
+    public int getOutCount() {
+        return outCount;
+    }
+
+    public void addOutCount(int outCount) {
+        this.outCount += outCount;
+    }
+
+
+    public String getFilePost() {
+        return filePost;
+    }
+
+    public void setFilePost(String filePost) {
+        this.filePost = filePost;
+    }
+
+
+    public Date getPostTime() {
+        return postTime;
+    }
+
+    public void setPostTime(Date postTime) {
+        this.postTime = postTime;
+    }
 }
