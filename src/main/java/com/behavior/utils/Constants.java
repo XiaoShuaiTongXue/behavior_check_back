@@ -13,8 +13,9 @@ public interface Constants {
         String TEACHER_KEY_RECORD = "teacher_key_record";
         String NORMAL_SIGN = "normal_sign";
         String LATER_SIGN = "later_sign";
-        String BEHAVIOR_KEY = "behavior_key_online";
-        String CLASS_KEY = "class_key_online";
+        String BEHAVIOR_KEY_ONLINE = "behavior_key_online";
+        String BEHAVIOR_KEY_OUTLINE = "behavior_key_outline";
+        String CLASS_KEY = "class_key";
     }
 
     interface Behavior{
@@ -38,6 +39,7 @@ public interface Constants {
     interface TimeValueByMS {
         int S = 1000;
         int MIN = S * 60;
+        int  MIN_5 = 5 * MIN;
         int HOUR = MIN * 60;
         int HOUR_2 = 2 * HOUR;
         int DAY = HOUR * 24;

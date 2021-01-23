@@ -294,10 +294,14 @@ public class TeacherServiceImp implements ITeacherService {
             return ResponseResult.FAILED("当前账号未登录，请登录后重试");
         }
         String courseId = courseDao.findCourseIdByCourseNameAndTeacherId(courseName, teacher.getId());
+        if (courseId == null) {
+            return ResponseResult.FAILED("课程不存在");
+        }
         List<String> classIds = courseDao.findClassIdsByCourseId(courseId);
         List<String> studentIds = studentDao.findIdsByClassIds(classIds);
         String behaviorId = String.valueOf(idWorker.nextId());
-        if (redisUtil.get(Constants.User.BEHAVIOR_KEY + courseId) != null) {
+        if (redisUtil.get(Constants.User.BEHAVIOR_KEY_ONLINE + courseId) != null ||
+                redisUtil.get(Constants.User.BEHAVIOR_KEY_OUTLINE + courseId) != null) {
             return ResponseResult.FAILED("该课程已经开启线上或线下行为检测，无法重复开启");
         }
         for (String classId : classIds) {
@@ -308,7 +312,6 @@ public class TeacherServiceImp implements ITeacherService {
         for (String classId : classIds) {
             redisUtil.set(Constants.User.CLASS_KEY + classId, behaviorId, Constants.TimeValueByS.HOUR_2);
         }
-        redisUtil.set(Constants.User.BEHAVIOR_KEY + courseId, behaviorId, Constants.TimeValueByS.HOUR_2);
         if (type == Constants.Behavior.BEHAVIOR_ONLINE) {
             OnlineCourse onlineCourse = new OnlineCourse();
             onlineCourse.setId(behaviorId);
@@ -324,6 +327,7 @@ public class TeacherServiceImp implements ITeacherService {
                 onlineStudentDao.save(onlineStudent);
             }
             onlineCourseIds.put(courseId, behaviorId);
+            redisUtil.set(Constants.User.BEHAVIOR_KEY_ONLINE + courseId, behaviorId, Constants.TimeValueByS.HOUR_2);
         } else if (type == Constants.Behavior.BEHAVIOR_OUTLINE) {
             OutlineCourse outlineCourse = new OutlineCourse();
             outlineCourse.setId(behaviorId);
@@ -339,6 +343,7 @@ public class TeacherServiceImp implements ITeacherService {
                 outlineStudentDao.save(outlineStudent);
             }
             outlineCourseIds.put(courseId, behaviorId);
+            redisUtil.set(Constants.User.BEHAVIOR_KEY_OUTLINE + courseId, behaviorId, Constants.TimeValueByS.HOUR_2);
         } else {
             return ResponseResult.FAILED("类型错误");
         }
@@ -366,23 +371,28 @@ public class TeacherServiceImp implements ITeacherService {
      */
     private ResponseResult stopBehaviorCheck(int type, String courseId) {
         List<String> classIds = courseDao.findClassIdsByCourseId(courseId);
-        String behaviorId = (String) redisUtil.get(Constants.User.BEHAVIOR_KEY + courseId);
-        if (TextUtil.isEmpty(behaviorId)) {
-            return ResponseResult.FAILED("未开启线上或线下行为检测");
-        }
         if (type == Constants.Behavior.BEHAVIOR_ONLINE) {
+            String behaviorId = (String) redisUtil.get(Constants.User.BEHAVIOR_KEY_ONLINE + courseId);
+            if (TextUtil.isEmpty(behaviorId)) {
+                return ResponseResult.FAILED("未开启线上行为检测");
+            }
             onlineCourseDao.updateEndTimeById(new Date(), behaviorId);
             sumOnlineBehavior(behaviorId);
+            redisUtil.del(Constants.User.BEHAVIOR_KEY_ONLINE + courseId);
             onlineCourseIds.remove(courseId);
         } else if (type == Constants.Behavior.BEHAVIOR_OUTLINE) {
+            String behaviorId = (String) redisUtil.get(Constants.User.BEHAVIOR_KEY_OUTLINE + courseId);
+            if (TextUtil.isEmpty(behaviorId)) {
+                return ResponseResult.FAILED("未开启线下行为检测");
+            }
             outlineCourseDao.updateEndTimeById(new Date(), behaviorId);
             sumOutlineBehavior(behaviorId);
+            redisUtil.del(Constants.User.BEHAVIOR_KEY_OUTLINE + courseId);
             outlineCourseIds.remove(courseId);
         }
         for (String classId : classIds) {
             redisUtil.del(Constants.User.CLASS_KEY + classId);
         }
-        redisUtil.del(Constants.User.BEHAVIOR_KEY + courseId);
         return ResponseResult.SUCCESS("行为检测结束");
     }
 
@@ -497,7 +507,7 @@ public class TeacherServiceImp implements ITeacherService {
         }
     }
 
-    @Scheduled(fixedRate = Constants.TimeValueByMS.MIN)
+    @Scheduled(fixedRate = Constants.TimeValueByMS.MIN_5)
     public void onlineTask() {
         if (onlineCourseIds.size() == 0) {
             System.out.println("当前没有执行的线上行为");
@@ -505,7 +515,7 @@ public class TeacherServiceImp implements ITeacherService {
         }
         Set<String> courseSet = onlineCourseIds.keySet();
         for (String courseId : courseSet) {
-            if (redisUtil.get(Constants.User.BEHAVIOR_KEY + courseId) == null) {
+            if (redisUtil.get(Constants.User.BEHAVIOR_KEY_ONLINE + courseId) == null) {
                 String onlineBehaviorId = onlineCourseIds.get(courseId);
                 onlineCourseDao.updateEndTimeById(new Date(), onlineBehaviorId);
                 sumOnlineBehavior(onlineBehaviorId);
@@ -517,7 +527,7 @@ public class TeacherServiceImp implements ITeacherService {
         System.out.println("线上任务行为保存成功：" + LocalDateTime.now());
     }
 
-    @Scheduled(fixedRate = Constants.TimeValueByMS.MIN)
+    @Scheduled(fixedRate = Constants.TimeValueByMS.MIN_5)
     public void outlineTask() {
         if (outlineCourseIds.size() == 0) {
             System.out.println("当前没有执行的线下行为");
@@ -525,7 +535,7 @@ public class TeacherServiceImp implements ITeacherService {
         }
         Set<String> courseSet = outlineCourseIds.keySet();
         for (String courseId : courseSet) {
-            if (redisUtil.get(Constants.User.BEHAVIOR_KEY + courseId) == null) {
+            if (redisUtil.get(Constants.User.BEHAVIOR_KEY_OUTLINE + courseId) == null) {
                 String outlineBehaviorId = outlineCourseIds.get(courseId);
                 outlineCourseDao.updateEndTimeById(new Date(), outlineBehaviorId);
                 sumOnlineBehavior(outlineBehaviorId);

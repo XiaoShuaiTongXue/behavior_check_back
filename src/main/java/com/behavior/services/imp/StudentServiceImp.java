@@ -10,6 +10,7 @@ import io.jsonwebtoken.Claims;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
@@ -27,6 +28,7 @@ import javax.servlet.http.HttpServletResponse;
 import javax.transaction.Transactional;
 import java.io.File;
 import java.util.Date;
+import java.util.List;
 
 @Service
 @Transactional
@@ -156,17 +158,18 @@ public class StudentServiceImp implements IStudentService {
         if (student == null) {
             return ResponseResult.FAILED("学生未登录，请登录后重试");
         }
+        Pageable pageable = PageUtil.getPageable(page, size,null);
         Page<SignStudent> signStudents = signStudentDao.findAll(new Specification<SignStudent>() {
             @Override
             public Predicate toPredicate(Root<SignStudent> root, CriteriaQuery<?> query, CriteriaBuilder cb) {
                 Predicate studentPre = cb.equal(root.get("studentId").as(String.class), student.getId());
                 if (!TextUtil.isEmpty(state) && TextUtil.judgeState(Integer.parseInt(state))) {
-                    Predicate statePre = cb.equal(root.get("sign_state").as(int.class), Integer.parseInt(state));
+                    Predicate statePre = cb.equal(root.get("signState").as(int.class), Integer.parseInt(state));
                     return cb.and(studentPre, statePre);
                 }
                 return studentPre;
             }
-        }, PageUtil.getPageable(page, size, Sort.by(Sort.Direction.DESC, "out_end_time")));
+        }, pageable);
         return ResponseResult.SUCCESS("学生个人签到信息查询成功").setData(signStudents);
     }
 
