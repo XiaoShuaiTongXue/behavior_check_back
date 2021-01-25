@@ -27,7 +27,7 @@ public class ClaimsUtils {
         claims.put(SN,student.getStudentNumber());
         claims.put(AVATAR,student.getAvatar());
         claims.put(CLASS_ID,student.getClassId());
-        claims.put(BEHAVIOR_PATH,student.getBehaviorPath());
+//        claims.put(BEHAVIOR_PATH,student.getBehaviorPath());
         claims.put(CLASS_NAME,student.getClassName());
         return claims;
     }
@@ -40,7 +40,7 @@ public class ClaimsUtils {
         student.setStudentNumber((String) claims.get(SN));
         student.setAvatar((String) claims.get(AVATAR));
         student.setClassId((String) claims.get(CLASS_ID));
-        student.setBehaviorPath((String) claims.get(BEHAVIOR_PATH));
+//        student.setBehaviorPath((String) claims.get(BEHAVIOR_PATH));
         student.setClassName((String) claims.get(CLASS_NAME));
         return student;
     }

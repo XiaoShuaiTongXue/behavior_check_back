@@ -188,7 +188,8 @@ public class TeacherServiceImp implements ITeacherService {
         String teacherId = teacher.getId();
         String recordId = (String) redisUtil.get(Constants.User.TEACHER_KEY_RECORD + teacherId);
         if (recordId != null) {
-            return ResponseResult.FAILED("当前课前签到未结束，请稍后后重试").setData(recordId);
+            SignRecord signRecordFromDb = signRecordDao.findSignRecordById(recordId);
+            return ResponseResult.FAILED("当前签到未结束，请稍后后重试").setData(signRecordFromDb);
         }
         String courseId = courseDao.findCourseIdByCourseNameAndTeacherId(courseName, teacherId);
         SignRecord signRecord = new SignRecord();
@@ -206,9 +207,11 @@ public class TeacherServiceImp implements ITeacherService {
         signRecord.setOutEndTime(calendar.getTime());
         signRecordDao.save(signRecord);
         redisUtil.set(Constants.User.TEACHER_KEY_RECORD + teacherId, recordId, Constants.TimeValueByS.MIN * signTime);
-        redisUtil.set(Constants.User.NORMAL_SIGN + recordId, 1, Constants.TimeValueByS.MIN * signTime);
-        redisUtil.set(Constants.User.LATER_SIGN + recordId, 1, Constants.TimeValueByS.MIN * truantTime);
         List<String> classIds = courseDao.findClassIdsByCourseId(courseId);
+        for (String classId : classIds) {
+            redisUtil.set(Constants.User.NORMAL_SIGN + classId, recordId, Constants.TimeValueByS.MIN * signTime);
+            redisUtil.set(Constants.User.LATER_SIGN + classId, recordId, Constants.TimeValueByS.MIN * truantTime);
+        }
         List<String> studentIds = studentDao.findIdsByClassIds(classIds);
         for (String studentId : studentIds) {
             SignStudent signStudent = new SignStudent();
@@ -305,7 +308,7 @@ public class TeacherServiceImp implements ITeacherService {
             return ResponseResult.FAILED("该课程已经开启线上或线下行为检测，无法重复开启");
         }
         for (String classId : classIds) {
-            if (redisUtil.get(Constants.User.CLASS_KEY + classId) == null) {
+            if (redisUtil.get(Constants.User.CLASS_KEY + classId) != null) {
                 return ResponseResult.FAILED("当前课程的班级已经开启行为检测，了解更多信息请联系相关部门").setData(classId);
             }
         }

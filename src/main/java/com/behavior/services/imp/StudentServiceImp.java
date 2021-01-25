@@ -53,6 +53,9 @@ public class StudentServiceImp implements IStudentService {
     private SignStudentDao signStudentDao;
 
     @Autowired
+    private SignRecordDao signRecordDao;
+
+    @Autowired
     private OnlineStudentDao onlineStudentDao;
 
     @Autowired
@@ -92,8 +95,8 @@ public class StudentServiceImp implements IStudentService {
         }
         String className = getClassName(classId);
         student.setClassName(className);
-        String filePath = getFilePath(className, name);
-        student.setBehaviorPath(filePath);
+//        String filePath = getFilePath(className, name);
+//        student.setBehaviorPath(filePath);
         student.setId(String.valueOf(idWorker.nextId()));
         student.setPassword(bCryptPasswordEncoder.encode(password));
         student.setAvatar(Constants.User.DEFAULT_AVATAR);
@@ -158,37 +161,39 @@ public class StudentServiceImp implements IStudentService {
         if (student == null) {
             return ResponseResult.FAILED("学生未登录，请登录后重试");
         }
-        Pageable pageable = PageUtil.getPageable(page, size,null);
-        Page<SignStudent> signStudents = signStudentDao.findAll(new Specification<SignStudent>() {
-            @Override
-            public Predicate toPredicate(Root<SignStudent> root, CriteriaQuery<?> query, CriteriaBuilder cb) {
-                Predicate studentPre = cb.equal(root.get("studentId").as(String.class), student.getId());
-                if (!TextUtil.isEmpty(state) && TextUtil.judgeState(Integer.parseInt(state))) {
-                    Predicate statePre = cb.equal(root.get("signState").as(int.class), Integer.parseInt(state));
-                    return cb.and(studentPre, statePre);
-                }
-                return studentPre;
+        Pageable pageable = PageUtil.getPageable(page, size, null);
+        Page<SignStudent> signStudents = signStudentDao.findAll((Specification<SignStudent>) (root, query, cb) -> {
+            Predicate studentPre = cb.equal(root.get("studentId").as(String.class), student.getId());
+            if (!TextUtil.isEmpty(state) && TextUtil.judgeState(Integer.parseInt(state))) {
+                Predicate statePre = cb.equal(root.get("signState").as(int.class), Integer.parseInt(state));
+                return cb.and(studentPre, statePre);
             }
+            return studentPre;
         }, pageable);
         return ResponseResult.SUCCESS("学生个人签到信息查询成功").setData(signStudents);
     }
 
     @Override
-    public ResponseResult sign(String signStudentId) {
-        SignStudent signStudent = signStudentDao.findSignStudentById(signStudentId);
-        if (signStudent == null) {
-            return ResponseResult.FAILED("学生个人签到ID错误");
+    public ResponseResult sign() {
+        Student student = checkStudent();
+        if (student == null) {
+            return ResponseResult.FAILED("当前账号未登录");
         }
-        String signRecordId = signStudent.getSignRecordId();
-        if (redisUtil.get(Constants.User.NORMAL_SIGN + signRecordId) != null) {
-            signStudentDao.deleteById(signStudentId);
-            return ResponseResult.SUCCESS("签到成功");
+        String classId = student.getClassId();
+        String studentId = student.getId();
+        Object normal = redisUtil.get(Constants.User.NORMAL_SIGN + classId);
+        Object later = redisUtil.get(Constants.User.LATER_SIGN + classId);
+        if (later == null) {
+            return ResponseResult.FAILED("当前没有可用的签到");
         }
-        if (redisUtil.get(Constants.User.LATER_SIGN + signRecordId) != null) {
-            signStudentDao.updateStateById(Constants.SignState.LATE_STATE, signStudentId);
-            return ResponseResult.SUCCESS("签到成功,你已经迟到，但是没有超过旷课时间");
+        String signRecordId = (String) later;
+        SignRecord signRecord = signRecordDao.findSignRecordById(signRecordId);
+        if (normal == null) {
+            signStudentDao.signByStudent(Constants.SignState.LATE_STATE, studentId, signRecordId);
+            return ResponseResult.SUCCESS("签到成功,你已经迟到，但是没有超过旷课时间").setData(signRecord);
         }
-        return ResponseResult.FAILED("无法签到");
+        signStudentDao.deleteByStudentIdAndSignRecordId(studentId,signRecordId);
+        return ResponseResult.SUCCESS("签到成功").setData(signRecord);
     }
 
 

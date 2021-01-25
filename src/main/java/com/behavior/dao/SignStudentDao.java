@@ -18,4 +18,10 @@ public interface SignStudentDao extends JpaRepository<SignStudent, String>, JpaS
     @Modifying
     @Query(nativeQuery = true,value = "UPDATE `tb_sign_student` SET `sign_state` = ? WHERE id = ?")
     int updateStateById(int state,String id);
+
+    int deleteByStudentIdAndSignRecordId(String studentId,String signRecordId);
+
+    @Modifying
+    @Query(nativeQuery = true,value = "UPDATE `tb_sign_student` SET `sign_state` = 0 WHERE `student_id` = ? AND `sign_record_id` = ?")
+    int signByStudent(int state,String studentId,String signRecordId);
 }

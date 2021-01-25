@@ -19,4 +19,6 @@ public interface SignRecordDao extends JpaRepository<SignRecord, String>, JpaSpe
 
     @Query(nativeQuery = true, value = "SELECT `id` FROM `tb_sign_record` WHERE `course_id` = ? ")
     List<String> findIdsByCourseId(String courseId, Pageable pageable);
+
+    SignRecord findSignRecordById(String id);
 }

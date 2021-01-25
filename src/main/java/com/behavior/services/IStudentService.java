@@ -15,7 +15,7 @@ public interface IStudentService {
 
     ResponseResult gesSigns(int page,int size,String state);
 
-    ResponseResult sign(String signStudentId);
+    ResponseResult sign();
 
     ResponseResult postOutlineBehavior(OutlineStudent outlineStudent);
 

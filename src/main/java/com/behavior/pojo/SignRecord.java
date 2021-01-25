@@ -2,10 +2,7 @@ package com.behavior.pojo;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
 
-import javax.persistence.Column;
-import javax.persistence.Entity;
-import javax.persistence.Id;
-import javax.persistence.Table;
+import javax.persistence.*;
 import java.util.Date;
 
 @Entity
@@ -16,6 +13,9 @@ public class SignRecord {
 	private String id;
   	@Column(name = "course_id" )
 	private String courseId;
+	@OneToOne(targetEntity = Course.class)
+	@JoinColumn(name = "course_id",referencedColumnName = "id",insertable = false,updatable = false)
+  	private Course course;
   	@Column(name = "sign_start_time" )
 	@JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss", timezone = "GMT+8")
 	private Date signStartTime;
@@ -43,7 +43,6 @@ public class SignRecord {
 		this.id = id;
 	}
 
-
 	public String getCourseId() {
 		return courseId;
 	}
@@ -52,6 +51,13 @@ public class SignRecord {
 		this.courseId = courseId;
 	}
 
+	public Course getCourse() {
+		return course;
+	}
+
+	public void setCourse(Course course) {
+		this.course = course;
+	}
 
 	public Date getSignStartTime() {
 		return signStartTime;

@@ -25,8 +25,6 @@ public class Student {
 	private String classId;
 	@Column(name = "class_name" )
 	private String className;
-	@Column(name = "behavior_path" )
-	private String behaviorPath;
 
 	public String getId() {
 		return id;
@@ -97,14 +95,6 @@ public class Student {
 
 	public void setClassName(String faceCsv) {
 		this.className = faceCsv;
-	}
-
-	public String getBehaviorPath() {
-		return behaviorPath;
-	}
-
-	public void setBehaviorPath(String behaviorPath) {
-		this.behaviorPath = behaviorPath;
 	}
 
 }
