@@ -3,12 +3,10 @@ package com.behavior.services;
 import com.behavior.pojo.Teacher;
 import com.behavior.reponse.ResponseResult;
 
-import java.util.Date;
-
 public interface ITeacherService {
     ResponseResult register(Teacher teacher);
 
-    ResponseResult doLogin(Teacher teacher);
+    ResponseResult doLogin( Teacher teacher);
 
     Teacher checkTeacher();
 
@@ -24,5 +22,15 @@ public interface ITeacherService {
 
     ResponseResult beginBehavior(String courseName,int type);
 
-    ResponseResult stopBehavior(String courseName,int type);
+    ResponseResult stopBehavior(int type);
+
+    ResponseResult getSignLate();
+
+    ResponseResult getSignOut();
+
+    ResponseResult getOnlineNow();
+
+    ResponseResult getOnlineInfos(int page, int size, String courseName);
+
+    ResponseResult getOnlineChartsData();
 }

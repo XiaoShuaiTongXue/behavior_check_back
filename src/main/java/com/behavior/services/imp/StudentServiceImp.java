@@ -19,10 +19,7 @@ import org.springframework.util.DigestUtils;
 import org.springframework.web.context.request.RequestContextHolder;
 import org.springframework.web.context.request.ServletRequestAttributes;
 
-import javax.persistence.criteria.CriteriaBuilder;
-import javax.persistence.criteria.CriteriaQuery;
 import javax.persistence.criteria.Predicate;
-import javax.persistence.criteria.Root;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import javax.transaction.Transactional;
@@ -32,7 +29,7 @@ import java.util.List;
 
 @Service
 @Transactional
-public class StudentServiceImp implements IStudentService {
+ public class StudentServiceImp implements IStudentService {
 
     @Autowired
     private StudentDao studentDao;
@@ -61,9 +58,15 @@ public class StudentServiceImp implements IStudentService {
     @Autowired
     private OutlineStudentDao outlineStudentDao;
 
+    @Autowired
+    private SchoolDao schoolDao;
+
+    @Autowired
+    private GradeDao gradeDao;
+
+
     @Value("${shuai.blog.file.save-path}")
     public String basePath;
-
 
     @Override
     public ResponseResult register(Student student) {
@@ -107,6 +110,7 @@ public class StudentServiceImp implements IStudentService {
 
     @Override
     public ResponseResult doLogin(Student student) {
+        HttpServletRequest request = getServletRequest();
         String studentNumber = student.getStudentNumber();
         String password = student.getPassword();
         if (TextUtil.isEmpty(studentNumber)) {
@@ -119,7 +123,6 @@ public class StudentServiceImp implements IStudentService {
         if (studentFromDb == null || !bCryptPasswordEncoder.matches(student.getPassword(), studentFromDb.getPassword())) {
             return ResponseResult.FAILED("账号或密码错误");
         }
-        HttpServletRequest request = getServletRequest();
         String tokenKey = CookieUtil.getCookie(request, Constants.User.STUDENT_COOKIE_TOKEN_KEY);
         if (tokenKey != null) {
             redisUtil.del(Constants.User.STUDENT_KEY_TOKEN + tokenKey);
@@ -127,33 +130,6 @@ public class StudentServiceImp implements IStudentService {
         createToken(studentFromDb);
         return ResponseResult.Get(ResponseState.LOGIN_IN_SUCCESS);
     }
-
-//    @Override
-//    public ResponseResult enterFaceCsv(String studentNum, String faceCsv) {
-//        Student studentFromDb = studentDao.findUserByStudentNumber(studentNum);
-//        if (studentFromDb == null) {
-//            return ResponseResult.FAILED("用户学号错误");
-//        }
-//        if (faceCsv == null) {
-//            return ResponseResult.FAILED("人脸数据为空");
-//        }
-//        studentFromDb.setFaceCsv(faceCsv);
-//        studentDao.save(studentFromDb);
-//        return ResponseResult.SUCCESS("人脸数据录入失败");
-//    }
-//
-//        @Override
-//    public ResponseResult getFaceCsv() {
-//        Student student = checkStudent();
-//        if (student == null) {
-//            return ResponseResult.FAILED("用户未登录，请登录后重试");
-//        }
-//        String faceCsv = studentDao.findFaceCsvByStudentId(student.getId());
-//        if (TextUtil.isEmpty(faceCsv)) {
-//            return ResponseResult.FAILED("人脸信息未录入，请先录入人脸数据");
-//        }
-//        return ResponseResult.SUCCESS("人脸信息查询成功").setData(faceCsv);
-//    }
 
     @Override
     public ResponseResult gesSigns(int page, int size, String state) {
@@ -198,42 +174,88 @@ public class StudentServiceImp implements IStudentService {
 
 
     @Override
-    public ResponseResult postOutlineBehavior(OutlineStudent outlineStudent) {
+    public ResponseResult findSign() {
+        Student student = checkStudent();
+        if (student == null) {
+            return ResponseResult.FAILED("当前账号未登录");
+        }
+        String classId = student.getClassId();
+        Object later = redisUtil.get(Constants.User.LATER_SIGN + classId);
+        if (later == null) {
+            return ResponseResult.FAILED("没有可用的签到");
+        }
+        SignRecord signRecord = signRecordDao.findSignRecordById((String) later);
+        return ResponseResult.SUCCESS("你有可用签到").setData(signRecord);
+    }
+
+//
+//    @Override
+//    public ResponseResult postOutlineBehavior(OutlineStudent outlineStudent) {
+//        Student student = checkStudent(request);
+//        if (student == null) {
+//            return ResponseResult.FAILED("用户未登录，请登录后重试");
+//        }
+//        String classId = student.getClassId();
+//        String studentId = student.getId();
+//        Object behaviorId = redisUtil.get(Constants.User.CLASS_KEY + classId);
+//        if (behaviorId == null) {
+//            return ResponseResult.FAILED("该班级未开始课下行为检测");
+//        }
+//        OutlineStudent outlineStudentFromDb = outlineStudentDao
+//                .findOutlineStudentByStudentIdAndBehaviorId(studentId, (String) behaviorId);
+//        int lookNoteCount = outlineStudent.getLookNoteCount();
+//        int phoneCount = outlineStudent.getPhoneCount();
+//        int writeCount = outlineStudent.getWriteCount();
+//        int passNoteCount = outlineStudent.getPassNoteCount();
+//        int putBagCount = outlineStudent.getPutBagCount();
+//        if (lookNoteCount > 0) {
+//            outlineStudentFromDb.addLookNoteCount(lookNoteCount);
+//        }
+//        if (phoneCount > 0) {
+//            outlineStudentFromDb.addPhoneCount(phoneCount);
+//        }
+//        if (writeCount > 0) {
+//            outlineStudentFromDb.addWriteCount(writeCount);
+//        }
+//        if (passNoteCount > 0) {
+//            outlineStudentFromDb.addPassNoteCount(passNoteCount);
+//        }
+//        if (putBagCount > 0) {
+//            outlineStudentFromDb.addPutBagCount(putBagCount);
+//        }
+//        outlineStudentFromDb.setPostTime(new Date());
+//        outlineStudentDao.save(outlineStudentFromDb);
+//        return ResponseResult.SUCCESS("线下学生行为更新成功");
+//    }
+
+    @Override
+    public ResponseResult findOnlineBehavior() {
         Student student = checkStudent();
         if (student == null) {
             return ResponseResult.FAILED("用户未登录，请登录后重试");
         }
         String classId = student.getClassId();
-        String studentId = student.getId();
-        Object behaviorId = redisUtil.get(Constants.User.CLASS_KEY + classId);
-        if (behaviorId == null) {
-            return ResponseResult.FAILED("该班级未开始课下行为检测");
+        if (redisUtil.get(Constants.User.CLASS_KEY + classId) == null) {
+            return ResponseResult.FAILED("您所在的班级没有课上行为检测前没有课上行为检测");
         }
-        OutlineStudent outlineStudentFromDb = outlineStudentDao
-                .findOutlineStudentByStudentIdAndBehaviorId(studentId, (String) behaviorId);
-        int lookNoteCount = outlineStudent.getLookNoteCount();
-        int phoneCount = outlineStudent.getPhoneCount();
-        int writeCount = outlineStudent.getWriteCount();
-        int passNoteCount = outlineStudent.getPassNoteCount();
-        int putBagCount = outlineStudent.getPutBagCount();
-        if (lookNoteCount > 0) {
-            outlineStudentFromDb.addLookNoteCount(lookNoteCount);
+        return ResponseResult.SUCCESS("您所在的班级已经开启课上行为检测");
+    }
+
+    @Override
+    public ResponseResult getSchools() {
+        List<School> schools = schoolDao.findAll();
+        return ResponseResult.SUCCESS("查询学校成功 ").setData(schools);
+    }
+
+    @Override
+    public ResponseResult getOnlineBehaviors(int page, int size) {
+        Student student = checkStudent();
+        if (student == null) {
+            return ResponseResult.FAILED("用户未登录，请登录后重试");
         }
-        if (phoneCount > 0) {
-            outlineStudentFromDb.addPhoneCount(phoneCount);
-        }
-        if (writeCount > 0) {
-            outlineStudentFromDb.addWriteCount(writeCount);
-        }
-        if (passNoteCount > 0) {
-            outlineStudentFromDb.addPassNoteCount(passNoteCount);
-        }
-        if (putBagCount > 0) {
-            outlineStudentFromDb.addPutBagCount(putBagCount);
-        }
-        outlineStudentFromDb.setPostTime(new Date());
-        outlineStudentDao.save(outlineStudentFromDb);
-        return ResponseResult.SUCCESS("线下学生行为更新成功");
+        Pageable pageable = PageUtil.getPageable(page, size, Sort.by(Sort.Direction.DESC, "postTime"));
+        List<OnlineStudent> onlineStudents = onlineStudentDao.findOnlineStudentByStudentId(student.getId(), pageable);
+        return ResponseResult.SUCCESS("获取学生个人签到信息成功").setData(onlineStudents);
     }
 
     @Override

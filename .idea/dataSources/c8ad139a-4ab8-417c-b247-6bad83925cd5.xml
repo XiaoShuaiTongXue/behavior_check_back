@@ -1372,65 +1372,59 @@ SELECT|sys.sys_config
       <DataType>varchar(64)|0s</DataType>
       <NotNull>1</NotNull>
     </column>
-    <column id="353" parent="245" name="behavior_path">
-      <Position>9</Position>
-      <Comment>学生个人信息存放路径</Comment>
-      <DataType>varchar(520)|0s</DataType>
-      <NotNull>1</NotNull>
-    </column>
-    <index id="354" parent="245" name="student_class">
+    <index id="353" parent="245" name="student_class">
       <ColNames>class_id</ColNames>
       <Type>btree</Type>
     </index>
-    <key id="355" parent="245" name="PRIMARY">
+    <key id="354" parent="245" name="PRIMARY">
       <NameSurrogate>1</NameSurrogate>
       <ColNames>id</ColNames>
       <Primary>1</Primary>
     </key>
-    <foreign-key id="356" parent="245" name="student_class">
+    <foreign-key id="355" parent="245" name="student_class">
       <ColNames>class_id</ColNames>
       <RefTableName>tb_class</RefTableName>
       <RefColNames>id</RefColNames>
       <OnUpdate>cascade</OnUpdate>
       <OnDelete>cascade</OnDelete>
     </foreign-key>
-    <column id="357" parent="246" name="id">
+    <column id="356" parent="246" name="id">
       <Position>1</Position>
       <Comment>ID</Comment>
       <DataType>varchar(20)|0s</DataType>
       <NotNull>1</NotNull>
     </column>
-    <column id="358" parent="246" name="name">
+    <column id="357" parent="246" name="name">
       <Position>2</Position>
       <Comment>姓名</Comment>
       <DataType>varchar(32)|0s</DataType>
       <NotNull>1</NotNull>
     </column>
-    <column id="359" parent="246" name="password">
+    <column id="358" parent="246" name="password">
       <Position>3</Position>
       <Comment>密码</Comment>
       <DataType>varchar(64)|0s</DataType>
       <NotNull>1</NotNull>
     </column>
-    <column id="360" parent="246" name="sex">
+    <column id="359" parent="246" name="sex">
       <Position>4</Position>
       <Comment>性别</Comment>
       <DataType>varchar(5)|0s</DataType>
       <NotNull>1</NotNull>
     </column>
-    <column id="361" parent="246" name="teacher_number">
+    <column id="360" parent="246" name="teacher_number">
       <Position>5</Position>
       <Comment>老师ID</Comment>
       <DataType>varchar(100)|0s</DataType>
       <NotNull>1</NotNull>
     </column>
-    <column id="362" parent="246" name="avatar">
+    <column id="361" parent="246" name="avatar">
       <Position>6</Position>
       <Comment>头像</Comment>
       <DataType>varchar(1024)|0s</DataType>
       <NotNull>1</NotNull>
     </column>
-    <key id="363" parent="246" name="PRIMARY">
+    <key id="362" parent="246" name="PRIMARY">
       <NameSurrogate>1</NameSurrogate>
       <ColNames>id</ColNames>
       <Primary>1</Primary>

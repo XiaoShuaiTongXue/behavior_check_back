@@ -1,5 +1,9 @@
 package com.behavior.pojo;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import com.fasterxml.jackson.annotation.JsonProperty;
+
 import javax.persistence.*;
 import java.util.Date;
 import java.util.List;
@@ -16,12 +20,25 @@ public class Classes {
 	private String classNo;
 	@Column(name = "class_count" )
 	private String classCount;
-	@OneToOne(targetEntity = Grade.class)
+	@JsonIgnoreProperties({"classes"})
+	@ManyToOne(targetEntity = Grade.class)
 	@JoinColumn(name = "grade_id",referencedColumnName = "id",insertable = false,updatable = false)
 	private Grade grade;
 
+	@JsonIgnore
+	public String getClassCount() {
+		return classCount;
+	}
 
-	public String getId() {
+	public Grade getGrade() {
+        return grade;
+    }
+
+    public void setGrade(Grade grade) {
+        this.grade = grade;
+    }
+
+    public String getId() {
 		return id;
 	}
 
@@ -30,14 +47,13 @@ public class Classes {
 	}
 
 
-	public String getGradeId() {
-		return gradeId;
-	}
-
 	public void setGradeId(String gradeId) {
 		this.gradeId = gradeId;
 	}
-
+	@JsonIgnore
+	public String getGradeId() {
+		return gradeId;
+	}
 
 	public String getClassNo() {
 		return classNo;
@@ -47,22 +63,8 @@ public class Classes {
 		this.classNo = classNo;
 	}
 
-
-	public String getClassCount() {
-		return classCount;
-	}
-
 	public void setClassCount(String classCount) {
 		this.classCount = classCount;
 	}
-
-	public Grade getGrade() {
-		return grade;
-	}
-
-	public void setGrade(Grade grade) {
-		this.grade = grade;
-	}
-
 
 }

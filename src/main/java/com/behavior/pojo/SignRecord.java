@@ -1,9 +1,11 @@
 package com.behavior.pojo;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 
 import javax.persistence.*;
 import java.util.Date;
+import java.util.List;
 
 @Entity
 @Table ( name ="tb_sign_record" )
@@ -25,7 +27,18 @@ public class SignRecord {
 	@Column(name = "out_end_time" )
 	@JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss", timezone = "GMT+8")
 	private Date outEndTime;
+	@JsonIgnoreProperties({"signRecord"})
+	@OneToMany(targetEntity = SignStudent.class)
+	@JoinColumn(name = "sign_record_id",referencedColumnName = "id")
+	List<SignStudent> signStudents;
 
+	public List<SignStudent> getSignStudents() {
+		return signStudents;
+	}
+
+	public void setSignStudents(List<SignStudent> signStudents) {
+		this.signStudents = signStudents;
+	}
 
 	public Date getOutEndTime() {
 		return outEndTime;
@@ -41,10 +54,6 @@ public class SignRecord {
 
 	public void setId(String id) {
 		this.id = id;
-	}
-
-	public String getCourseId() {
-		return courseId;
 	}
 
 	public void setCourseId(String courseId) {

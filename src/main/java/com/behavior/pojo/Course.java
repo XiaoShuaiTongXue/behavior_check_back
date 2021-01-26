@@ -38,10 +38,6 @@ public class Course {
 	}
 
 
-	public String getTeacherId() {
-		return teacherId;
-	}
-
 	public void setTeacherId(String teacherId) {
 		this.teacherId = teacherId;
 	}

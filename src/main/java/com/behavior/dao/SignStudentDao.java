@@ -22,6 +22,8 @@ public interface SignStudentDao extends JpaRepository<SignStudent, String>, JpaS
     int deleteByStudentIdAndSignRecordId(String studentId,String signRecordId);
 
     @Modifying
-    @Query(nativeQuery = true,value = "UPDATE `tb_sign_student` SET `sign_state` = 0 WHERE `student_id` = ? AND `sign_record_id` = ?")
+    @Query(nativeQuery = true,value = "UPDATE `tb_sign_student` SET `sign_state` = ? WHERE `student_id` = ? AND `sign_record_id` = ?")
     int signByStudent(int state,String studentId,String signRecordId);
+
+    List<SignStudent> findAllBySignRecordIdAndSignState(String signRecordId,int signState);
 }

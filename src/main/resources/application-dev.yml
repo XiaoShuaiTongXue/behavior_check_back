@@ -1,0 +1,18 @@
+server:
+  port: 2020
+spring:
+  application:
+    name: behavior_check
+  datasource:
+    url: jdbc:mysql://81.70.224.19:3306/behavior?characterEncoding=utf8&useSSL=false
+    username: root
+    driver-class-name: com.mysql.jdbc.Driver
+    password: 123456
+  redis:
+    host: 81.70.224.19
+    port: 6379
+    password: 123456
+  jpa:
+    show-sql: false
+shuai.blog.file.save-path: /home/ubuntu/behavior_check/file
+shuai.blog.file.behavior-path: /home/ubuntu/behavior_check/file/behavior

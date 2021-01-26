@@ -1,7 +1,12 @@
 package com.behavior.utils;
 
 import org.apache.commons.lang3.time.DateUtils;
+import org.springframework.beans.factory.annotation.Value;
 
+import java.io.File;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 import java.text.ParseException;
 import java.util.Date;
 import java.util.regex.Matcher;
@@ -10,6 +15,7 @@ import java.util.regex.Pattern;
 public class TextUtil {
 
     public static final String regEx = "^([a-z0-9A-Z]+[-|\\.]?)+[a-z0-9A-Z]@([a-z0-9A-Z]+(-[a-z0-9A-Z]+)?\\.)+[a-zA-Z]{2,}$";
+
 
     public static boolean isEmpty(String str){
         return str == null || str.equals("");
@@ -45,4 +51,5 @@ public class TextUtil {
     public static Date formatDate(String date) throws ParseException {
         return DateUtils.parseDate(date, "yyyy-MM-dd HH:mm:ss");
     }
+
 }

@@ -1,5 +1,9 @@
 package com.behavior.pojo;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import com.fasterxml.jackson.annotation.JsonProperty;
+
 import javax.persistence.*;
 import java.util.Date;
 
@@ -18,26 +22,10 @@ public class SignStudent {
     @OneToOne(targetEntity = Student.class)
     @JoinColumn(name = "student_id", referencedColumnName = "id", insertable = false, updatable = false)
     private Student student;
-
-    @OneToOne(targetEntity = SignRecord.class)
-    @JoinColumn(name = "sign_record_id", referencedColumnName = "id", insertable = false, updatable = false)
+    @JsonIgnoreProperties({"signStudents"})
+    @ManyToOne(targetEntity = SignRecord.class)
+    @JoinColumn(name = "sign_record_id",referencedColumnName = "id",insertable = false,updatable = false)
     private SignRecord signRecord;
-
-    public SignRecord getSignRecord() {
-        return signRecord;
-    }
-
-    public void setSignRecord(SignRecord signRecord) {
-        this.signRecord = signRecord;
-    }
-
-    public Student getStudent() {
-        return student;
-    }
-
-    public void setStudent(Student student) {
-        this.student = student;
-    }
 
     public String getId() {
         return id;
@@ -47,23 +35,42 @@ public class SignStudent {
         this.id = id;
     }
 
-
+    @JsonIgnore
     public String getStudentId() {
         return studentId;
     }
-
-    public void setStudentId(String studentId) {
-        this.studentId = studentId;
-    }
-
-
+    @JsonIgnore
     public String getSignRecordId() {
         return signRecordId;
     }
 
+    @JsonProperty
     public void setSignRecordId(String signRecordId) {
         this.signRecordId = signRecordId;
     }
+
+    @JsonProperty
+    public void setStudentId(String studentId) {
+        this.studentId = studentId;
+    }
+
+    public SignRecord getSignRecord() {
+        return signRecord;
+    }
+
+    public void setSignRecord(SignRecord signRecord) {
+        this.signRecord = signRecord;
+    }
+
+    public String getStudent() {
+        return student.getName();
+    }
+
+    public void setStudent(Student student) {
+        this.student = student;
+    }
+
+
 
     public int getSignState() {
         return signState;

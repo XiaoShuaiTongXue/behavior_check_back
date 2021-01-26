@@ -10,9 +10,10 @@ public interface Constants {
         String STUDENT_COOKIE_TOKEN_KEY = "student_cookie_token_key";
         String TEACHER_KEY_TOKEN = "teacher_key_token";
         String TEACHER_COOKIE_TOKEN_KEY = "teacher_cookie_token_key";
-        String TEACHER_KEY_RECORD = "teacher_key_record";
+        String TEACHER_SIGN = "teacher_sign";
         String NORMAL_SIGN = "normal_sign";
         String LATER_SIGN = "later_sign";
+        String TEACHER_KEY_ONLINE = "teacher_key_online";
         String BEHAVIOR_KEY_ONLINE = "behavior_key_online";
         String BEHAVIOR_KEY_OUTLINE = "behavior_key_outline";
         String CLASS_KEY = "class_key";

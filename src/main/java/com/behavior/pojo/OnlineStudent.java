@@ -1,12 +1,13 @@
 package com.behavior.pojo;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import com.fasterxml.jackson.annotation.JsonProperty;
 
-import javax.persistence.Column;
-import javax.persistence.Entity;
-import javax.persistence.Id;
-import javax.persistence.Table;
+import javax.persistence.*;
 import java.util.Date;
+import java.util.List;
 
 @Entity
 @Table(name = "tb_behavior_online_student")
@@ -31,7 +32,39 @@ public class OnlineStudent {
     private int outCount;
     @Column(name = "file_post")
     private String filePost;
+    @OneToOne(targetEntity = Student.class)
+    @JoinColumn(name = "student_id",referencedColumnName = "id",insertable = false,updatable = false)
+    Student student;
+    @JsonIgnoreProperties({"onlineStudents"})
+    @ManyToOne(targetEntity = OnlineCourse.class)
+    @JoinColumn(name = "behavior_id",referencedColumnName = "id",insertable = false,updatable = false)
+    private OnlineCourse onlineCourse;
 
+    @JsonIgnore
+    public String getStudentId() {
+        return studentId;
+    }
+
+    @JsonIgnore
+    public String getBehaviorId() {
+        return behaviorId;
+    }
+
+    public OnlineCourse getOnlineCourse() {
+        return onlineCourse;
+    }
+
+    public void setOnlineCourse(OnlineCourse onlineCourse) {
+        this.onlineCourse = onlineCourse;
+    }
+
+    public String getStudent() {
+        return student.getName();
+    }
+
+    public void setStudent(Student student) {
+        this.student = student;
+    }
 
     public String getId() {
         return id;
@@ -42,19 +75,12 @@ public class OnlineStudent {
     }
 
 
-    public String getStudentId() {
-        return studentId;
-    }
-
+    @JsonProperty
     public void setStudentId(String studentId) {
         this.studentId = studentId;
     }
 
-
-    public String getBehaviorId() {
-        return behaviorId;
-    }
-
+    @JsonProperty
     public void setBehaviorId(String behaviorId) {
         this.behaviorId = behaviorId;
     }
@@ -92,11 +118,6 @@ public class OnlineStudent {
 
     public void addOutCount(int outCount) {
         this.outCount += outCount;
-    }
-
-
-    public String getFilePost() {
-        return filePost;
     }
 
     public void setFilePost(String filePost) {

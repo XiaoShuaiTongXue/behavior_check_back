@@ -1,6 +1,5 @@
 package com.behavior.controller;
 
-import com.behavior.pojo.Student;
 import com.behavior.pojo.Teacher;
 import com.behavior.reponse.ResponseResult;
 import com.behavior.services.ITeacherService;
@@ -9,8 +8,6 @@ import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
-
-import java.util.Date;
 
 @Api("老师接口")
 @CrossOrigin
@@ -47,6 +44,18 @@ public class TeacherApi {
         return teacherService.beginSign(courseName, signTime, truantTime);
     }
 
+    @ApiOperation("获取本节课签到的迟到信息")
+    @GetMapping("/sign/late")
+    public ResponseResult getSignLate() {
+        return teacherService.getSignLate();
+    }
+
+    @ApiOperation("获取本节课签到的旷课信息")
+    @GetMapping("/sign/out")
+    public ResponseResult getSignOut() {
+        return teacherService.getSignOut();
+    }
+
     @ApiOperation("更新签到信息")
     @PostMapping("/update/sigin")
     public ResponseResult updateSign(@RequestParam("signID") String signID,
@@ -63,12 +72,6 @@ public class TeacherApi {
         return teacherService.getSignInfo(page, size, courseName, date);
     }
 
-    @ApiOperation("获取指定课程的所有签到日期")
-    @GetMapping("/sign/date")
-    public ResponseResult getCourseDate(@RequestParam("courseId") String courseId) {
-        return teacherService.getCourseDate(courseId);
-    }
-
     @ApiOperation("开始课上行为检测")
     @PostMapping("/online/begin")
     public ResponseResult beginOnlineBehavior(@RequestParam("courseName") String courseName) {
@@ -77,10 +80,35 @@ public class TeacherApi {
 
     @ApiOperation("停止课上行为检测")
     @PostMapping("/online/stop")
-    public ResponseResult stopOnlineBehavior(@RequestParam("courseName") String courseName) {
-        return teacherService.stopBehavior(courseName,Constants.Behavior.BEHAVIOR_ONLINE);
+    public ResponseResult stopOnlineBehavior() {
+        return teacherService.stopBehavior(Constants.Behavior.BEHAVIOR_ONLINE);
     }
 
+    @ApiOperation("获取行为检测信息")
+    @GetMapping("/online/{page}/{size}")
+    public ResponseResult getOnlineInfos(@PathVariable("page")int page,
+                                         @PathVariable("size")int size,
+                                         @RequestParam(value = "courseName",required = false)String courseName){
+        return teacherService.getOnlineInfos(page,size,courseName);
+    }
+
+    @ApiOperation("获取课程各个时间段的检测信息")
+    @GetMapping("/online/charts")
+    public ResponseResult getOnlineChartsData(){
+        return teacherService.getOnlineChartsData();
+    }
+
+    @ApiOperation("获取指定课程的所有签到日期")
+    @GetMapping("/sign/date")
+    public ResponseResult getCourseDate(@RequestParam("courseId") String courseId) {
+        return teacherService.getCourseDate(courseId);
+    }
+
+    @ApiOperation("获取本节课行为检测信息")
+    @GetMapping("/online/now")
+    public ResponseResult getOnlineBehavior(){
+        return teacherService.getOnlineNow();
+    }
 //    @ApiOperation("开始课下行为检测")
 //    @PostMapping("/outline/behavior")
 //    public ResponseResult beginOutlineBehavior(@RequestParam("courseName") String courseName) {

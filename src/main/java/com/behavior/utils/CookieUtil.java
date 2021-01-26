@@ -28,12 +28,17 @@ public class CookieUtil {
      * @return
      */
     public static String getCookie(HttpServletRequest request,String key){
+        if (request == null){
+            System.out.println("request为空");
+        }
         Cookie[] cookies = request.getCookies();
         if (cookies == null) {
+            System.out.println("cookies为空");
             return null;
         }
         for (Cookie cookie : cookies){
             if (key.equals(cookie.getName())){
+                System.out.println("找到cookie成功");
                 return cookie.getValue();
             }
         }

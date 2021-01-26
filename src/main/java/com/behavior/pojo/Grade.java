@@ -1,63 +1,87 @@
 package com.behavior.pojo;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import com.fasterxml.jackson.annotation.JsonProperty;
+
 import javax.persistence.*;
 import java.util.Date;
+import java.util.List;
 
 @Entity
-@Table ( name ="tb_grade" )
+@Table(name = "tb_grade")
 public class Grade {
 
-  	@Id
-	private String id;
-  	@Column(name = "grade_name" )
-	private String gradeName;
-  	@Column(name = "school_id" )
-	private String schoolId;
-  	@Column(name = "enrollment_year" )
-	private String enrollmentYear;
-	@OneToOne(targetEntity = School.class)
-	@JoinColumn(name = "school_id",referencedColumnName = "id",insertable = false,updatable = false)
-	private School school;
+    @Id
+    private String id;
+    @Column(name = "grade_name")
+    private String gradeName;
+    @JsonIgnore
+    @Column(name = "school_id")
+    private String schoolId;
+    @Column(name = "enrollment_year")
+    private String enrollmentYear;
 
-	public School getSchool() {
-		return school;
-	}
+    @JsonIgnoreProperties({"grade"})
+    @OneToMany(targetEntity = Classes.class)
+    @JoinColumn(name = "grade_id", referencedColumnName = "id")
+    List<Classes> classes;
 
-	public void setSchool(School school) {
-		this.school = school;
-	}
+    @JsonIgnoreProperties({"grade"})
+    @ManyToOne(targetEntity = School.class)
+    @JoinColumn(name = "school_id", referencedColumnName = "id", insertable = false, updatable = false)
+    private School school;
 
-	public String getId() {
-		return id;
-	}
+    public List<Classes> getClasses() {
+        return classes;
+    }
 
-	public void setId(String id) {
-		this.id = id;
-	}
+    public void setClasses(List<Classes> classes) {
+        this.classes = classes;
+    }
 
-	public String getGradeName() {
-		return gradeName;
-	}
+    public School getSchool() {
+        return school;
+    }
 
-	public void setGradeName(String gradeName) {
-		this.gradeName = gradeName;
-	}
+    public void setSchool(School school) {
+        this.school = school;
+    }
 
-	public String getSchoolId() {
-		return schoolId;
-	}
+    @JsonIgnore
+    public String getId() {
+        return id;
+    }
 
-	public void setSchoolId(String schoolId) {
-		this.schoolId = schoolId;
-	}
+    public void setId(String id) {
+        this.id = id;
+    }
+
+    public String getGradeName() {
+        return gradeName;
+    }
+
+    public void setGradeName(String gradeName) {
+        this.gradeName = gradeName;
+    }
 
 
-	public String getEnrollmentYear() {
-		return enrollmentYear;
-	}
+    public String getEnrollmentYear() {
+        return enrollmentYear;
+    }
 
-	public void setEnrollmentYear(String enrollmentYear) {
-		this.enrollmentYear = enrollmentYear;
-	}
+    @JsonIgnore
+    public String getSchoolId() {
+        return schoolId;
+    }
+
+    @JsonProperty
+    public void setSchoolId(String schoolId) {
+        this.schoolId = schoolId;
+    }
+
+    public void setEnrollmentYear(String enrollmentYear) {
+        this.enrollmentYear = enrollmentYear;
+    }
 
 }
