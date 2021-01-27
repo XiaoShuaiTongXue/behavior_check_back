@@ -93,9 +93,15 @@ public class TeacherApi {
     }
 
     @ApiOperation("获取课程各个时间段的检测信息")
+    @GetMapping("/online/charts/now")
+    public ResponseResult getOnlineNowChartsData(){
+        return teacherService.getOnlineNowChartsData();
+    }
+
+    @ApiOperation("根据课程行为Id,获取检测状态")
     @GetMapping("/online/charts")
-    public ResponseResult getOnlineChartsData(){
-        return teacherService.getOnlineChartsData();
+    public ResponseResult getOnlineChartsData(@RequestParam("behaviorId")String behaviorId){
+        return teacherService.getOnlineChartsData(behaviorId);
     }
 
     @ApiOperation("获取指定课程的所有签到日期")

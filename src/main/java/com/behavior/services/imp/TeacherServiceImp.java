@@ -6,6 +6,7 @@ import com.behavior.reponse.ResponseResult;
 import com.behavior.reponse.ResponseState;
 import com.behavior.services.ITeacherService;
 import com.behavior.utils.*;
+import com.google.gson.Gson;
 import io.jsonwebtoken.Claims;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
@@ -28,6 +29,7 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import javax.transaction.Transactional;
 import java.io.File;
+import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
@@ -481,14 +483,48 @@ public class TeacherServiceImp implements ITeacherService {
     }
 
     @Override
-    public ResponseResult getOnlineChartsData() {
+    public ResponseResult getOnlineNowChartsData() {
         ResponseResult result = getBehaviorIdFromRedis();
         if (result.isSuccess()) {
             String behaviorId = (String) result.getData();
-            //:TODO:获取记事本的信息
-            return null;
+            return getOnlineChartsData(behaviorId);
         }
         return result;
+    }
+
+    @Override
+    public ResponseResult getOnlineChartsData(String behaviorId) {
+        List<List<Integer>> lists = new ArrayList<>();
+        String savePath = behaviorFile + File.separator + behaviorId+".txt";
+        File file = new File(savePath);
+        Scanner scanner = null;
+        try {
+            scanner = new Scanner(file);
+        } catch (FileNotFoundException e) {
+            return ResponseResult.FAILED("当前图表未生成，请稍后再试");
+        }
+        int[] lastData = new int[4];
+        for (int i = 0; i < 4; i++) {
+            List<Integer> data = new ArrayList<>();
+            lists.add(data);
+        }
+        while (scanner.hasNext()) {
+            int[] data = Arrays.stream(scanner.next().split(",")).mapToInt(Integer::parseInt).toArray();
+            lists.get(0).add(data[0] - lastData[0]);
+            lists.get(1).add(data[1] - lastData[1]);
+            lists.get(2).add(data[2] - lastData[2]);
+            lists.get(3).add(data[3] - lastData[3]);
+            lastData = data;
+        }
+        String [] names = {"走神次数","瞌睡次数","说话次数","旷课次数"};
+        List<Series> seriesList = new ArrayList<>();
+        for (int i = 0; i < 4; i++) {
+            Series series = new Series();
+            series.setName(names[1]);
+            series.setData(lists.get(i));
+            seriesList.add(series);
+        }
+        return ResponseResult.SUCCESS("获取图表成功").setData(seriesList);
     }
 
     private void sumOnlineBehavior(String onlineBehaviorId) {

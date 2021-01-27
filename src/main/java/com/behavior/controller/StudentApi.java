@@ -10,7 +10,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
 @Api("学生接口")
-@CrossOrigin
+@CrossOrigin("*")
 @RestController
 @RequestMapping("/student")
 public class StudentApi {

@@ -32,5 +32,7 @@ public interface ITeacherService {
 
     ResponseResult getOnlineInfos(int page, int size, String courseName);
 
-    ResponseResult getOnlineChartsData();
+    ResponseResult getOnlineNowChartsData();
+
+    ResponseResult getOnlineChartsData(String behaviorId);
 }

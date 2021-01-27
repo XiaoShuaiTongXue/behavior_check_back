@@ -8,8 +8,10 @@ import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.context.annotation.Bean;
 import org.springframework.scheduling.annotation.EnableScheduling;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
+import org.springframework.web.bind.annotation.CrossOrigin;
 import springfox.documentation.swagger2.annotations.EnableSwagger2;
 
+@CrossOrigin
 @SpringBootApplication
 @EnableSwagger2
 @EnableScheduling
