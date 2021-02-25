@@ -28,7 +28,7 @@ public interface Constants {
      * 旷课：0
      * 迟到：1
      * 正常签到：2
-     * 请假：4
+     * 请假：3
      */
     interface SignState {
         int TRUANT_STATE = 0;
@@ -40,6 +40,7 @@ public interface Constants {
     interface TimeValueByMS {
         int S = 1000;
         int MIN = S * 60;
+        int MIN_3 = MIN * 3;
         int  MIN_5 = 5 * MIN;
         int HOUR = MIN * 60;
         int HOUR_2 = 2 * HOUR;

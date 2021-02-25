@@ -24,7 +24,7 @@ public class SignStudent {
     private Student student;
     @JsonIgnoreProperties({"signStudents"})
     @ManyToOne(targetEntity = SignRecord.class)
-    @JoinColumn(name = "sign_record_id",referencedColumnName = "id",insertable = false,updatable = false)
+    @JoinColumn(name = "sign_record_id", referencedColumnName = "id", insertable = false, updatable = false)
     private SignRecord signRecord;
 
     public String getId() {
@@ -35,21 +35,18 @@ public class SignStudent {
         this.id = id;
     }
 
-    @JsonIgnore
     public String getStudentId() {
         return studentId;
     }
-    @JsonIgnore
+
     public String getSignRecordId() {
         return signRecordId;
     }
 
-    @JsonProperty
     public void setSignRecordId(String signRecordId) {
         this.signRecordId = signRecordId;
     }
 
-    @JsonProperty
     public void setStudentId(String studentId) {
         this.studentId = studentId;
     }
@@ -69,7 +66,6 @@ public class SignStudent {
     public void setStudent(Student student) {
         this.student = student;
     }
-
 
 
     public int getSignState() {

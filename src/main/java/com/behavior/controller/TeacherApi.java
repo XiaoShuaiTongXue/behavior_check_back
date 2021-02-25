@@ -64,12 +64,9 @@ public class TeacherApi {
     }
 
     @ApiOperation("获取签到信息")
-    @GetMapping("/sign/{page}/{size}")
-    public ResponseResult getSignInfo(@PathVariable("page") int page,
-                                      @PathVariable("size") int size,
-                                      @RequestParam(value = "courseName") String courseName,
-                                      @RequestParam(value = "date", required = false) String date) {
-        return teacherService.getSignInfo(page, size, courseName, date);
+    @GetMapping("/sign")
+    public ResponseResult getSignInfo(@RequestParam(value = "courseName") String courseName) {
+        return teacherService.getSignInfo(courseName);
     }
 
     @ApiOperation("开始课上行为检测")
@@ -85,22 +82,20 @@ public class TeacherApi {
     }
 
     @ApiOperation("获取行为检测信息")
-    @GetMapping("/online/{page}/{size}")
-    public ResponseResult getOnlineInfos(@PathVariable("page")int page,
-                                         @PathVariable("size")int size,
-                                         @RequestParam(value = "courseName",required = false)String courseName){
-        return teacherService.getOnlineInfos(page,size,courseName);
+    @GetMapping("/online")
+    public ResponseResult getOnlineInfos(@RequestParam(value = "courseName", required = false) String courseName) {
+        return teacherService.getOnlineInfos(courseName);
     }
 
     @ApiOperation("获取课程各个时间段的检测信息")
     @GetMapping("/online/charts/now")
-    public ResponseResult getOnlineNowChartsData(){
+    public ResponseResult getOnlineNowChartsData() {
         return teacherService.getOnlineNowChartsData();
     }
 
     @ApiOperation("根据课程行为Id,获取检测状态")
     @GetMapping("/online/charts")
-    public ResponseResult getOnlineChartsData(@RequestParam("behaviorId")String behaviorId){
+    public ResponseResult getOnlineChartsData(@RequestParam("behaviorId") String behaviorId) {
         return teacherService.getOnlineChartsData(behaviorId);
     }
 
@@ -112,8 +107,14 @@ public class TeacherApi {
 
     @ApiOperation("获取本节课行为检测信息")
     @GetMapping("/online/now")
-    public ResponseResult getOnlineBehavior(){
+    public ResponseResult getOnlineBehavior() {
         return teacherService.getOnlineNow();
+    }
+
+    @ApiOperation("获取老师个人信息")
+    @GetMapping("/info")
+    public ResponseResult getTeacherInfo() {
+        return teacherService.getTeacherInfo();
     }
 //    @ApiOperation("开始课下行为检测")
 //    @PostMapping("/outline/behavior")
@@ -124,6 +125,6 @@ public class TeacherApi {
 //    @ApiOperation("停止课下行为检测")
 //    @PostMapping("/outline/stop")
 //    public ResponseResult stopOutlineBehavior(@RequestParam("courseName") String courseName) {
-//        return teacherService.stopBehavior(courseName,Constants.Behavior.BEHAVIOR_OUTLINE);
+//        return teacherService.stopBehavior(Constants.Behavior.BEHAVIOR_OUTLINE);
 //    }
 }

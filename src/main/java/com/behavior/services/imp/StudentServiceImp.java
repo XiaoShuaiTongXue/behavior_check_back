@@ -127,8 +127,7 @@ import java.util.List;
         if (tokenKey != null) {
             redisUtil.del(Constants.User.STUDENT_KEY_TOKEN + tokenKey);
         }
-        createToken(studentFromDb);
-        return ResponseResult.Get(ResponseState.LOGIN_IN_SUCCESS);
+        return ResponseResult.Get(ResponseState.LOGIN_IN_SUCCESS).setData(createToken(studentFromDb));
     }
 
     @Override
@@ -256,6 +255,15 @@ import java.util.List;
         Pageable pageable = PageUtil.getPageable(page, size, Sort.by(Sort.Direction.DESC, "postTime"));
         List<OnlineStudent> onlineStudents = onlineStudentDao.findOnlineStudentByStudentId(student.getId(), pageable);
         return ResponseResult.SUCCESS("获取学生个人签到信息成功").setData(onlineStudents);
+    }
+
+    @Override
+    public ResponseResult findStudentInfo() {
+        Student student = checkStudent();
+        if (student == null) {
+            return ResponseResult.FAILED("获取学生信息失败");
+        }
+        return ResponseResult.SUCCESS("获取学生信息成功").setData(student);
     }
 
     @Override

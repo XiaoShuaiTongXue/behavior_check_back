@@ -71,12 +71,10 @@ public class Teacher {
         this.teacherNumber = teacherNumber;
     }
 
-    @JsonIgnore
     public String getAvatar() {
         return avatar;
     }
 
-    @JsonProperty
     public void setAvatar(String avatar) {
         this.avatar = avatar;
     }

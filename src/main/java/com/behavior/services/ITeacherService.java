@@ -16,7 +16,7 @@ public interface ITeacherService {
 
     ResponseResult updateSign(String signID, int state);
 
-    ResponseResult getSignInfo(int page, int size, String courseName, String date);
+    ResponseResult getSignInfo(String courseName);
 
     ResponseResult getCourseDate(String courseId);
 
@@ -30,9 +30,11 @@ public interface ITeacherService {
 
     ResponseResult getOnlineNow();
 
-    ResponseResult getOnlineInfos(int page, int size, String courseName);
+    ResponseResult getOnlineInfos(String courseName);
 
     ResponseResult getOnlineNowChartsData();
 
     ResponseResult getOnlineChartsData(String behaviorId);
+
+    ResponseResult getTeacherInfo();
 }

@@ -1,6 +1,7 @@
 package com.behavior.controller;
 
 import com.behavior.pojo.OnlineStudent;
+import com.behavior.pojo.OutlineStudent;
 import com.behavior.pojo.Student;
 import com.behavior.reponse.ResponseResult;
 import com.behavior.services.IStudentService;
@@ -36,6 +37,11 @@ public class StudentApi {
         return studentService.getSchools();
     }
 
+    @ApiOperation("获取学生的个人信息")
+    @GetMapping("/info")
+    public ResponseResult findStudentInfo(){
+        return studentService.findStudentInfo();
+    }
 //    @ApiOperation("获取指定学校的年级")
 //    @GetMapping("/grades")
 //    public ResponseResult findGrades(@RequestParam("schoolId")String schoolId){

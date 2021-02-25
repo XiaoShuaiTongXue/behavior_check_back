@@ -6,7 +6,6 @@ import com.behavior.reponse.ResponseResult;
 import com.behavior.reponse.ResponseState;
 import com.behavior.services.ITeacherService;
 import com.behavior.utils.*;
-import com.google.gson.Gson;
 import io.jsonwebtoken.Claims;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
@@ -36,10 +35,8 @@ import java.nio.charset.StandardCharsets;
 import java.time.LocalDateTime;
 import java.util.*;
 
-
 @Service
 @Transactional
-
 public class TeacherServiceImp implements ITeacherService {
 
     @Autowired
@@ -258,17 +255,8 @@ public class TeacherServiceImp implements ITeacherService {
         return ResponseResult.SUCCESS("学生签到信息修改失败");
     }
 
-    /**
-     * 获取签到信息
-     *
-     * @param page       页码
-     * @param size       每页的条数
-     * @param courseName 课程名称
-     * @param date       签到日期
-     * @return
-     */
     @Override
-    public ResponseResult getSignInfo(int page, int size, String courseName, String date) {
+    public ResponseResult getSignInfo(String courseName) {
         Teacher teacher = checkTeacher();
         if (teacher == null) {
             return ResponseResult.FAILED("账号未登录");
@@ -277,22 +265,16 @@ public class TeacherServiceImp implements ITeacherService {
             return ResponseResult.FAILED("课程名称未选择");
         }
         String teacherId = teacher.getId();
-        Pageable pageable = PageUtil.getPageable(page, size, null);
         String courseId = courseDao.findCourseIdByCourseNameAndTeacherId(courseName, teacherId);
         if (TextUtil.isEmpty(courseId)) {
             return ResponseResult.FAILED("课程名称错误");
         }
-        Page<SignRecord> signRecords = signRecordDao.findAll(new Specification<SignRecord>() {
+        List<SignRecord> signRecords = signRecordDao.findAll(new Specification<SignRecord>() {
             @Override
             public Predicate toPredicate(Root<SignRecord> root, CriteriaQuery<?> query, CriteriaBuilder cb) {
-                Predicate coursePre = cb.equal(root.get("courseId").as(String.class), courseId);
-                if (TextUtil.isEmpty(date)) {
-                    return coursePre;
-                }
-                Predicate datePre = cb.equal(root.get("signStartTime").as(String.class), date);
-                return cb.and(coursePre, datePre);
+                return cb.equal(root.get("courseId").as(String.class), courseId);
             }
-        }, pageable);
+        });
         return ResponseResult.SUCCESS("查询成功").setData(signRecords);
     }
 
@@ -378,6 +360,7 @@ public class TeacherServiceImp implements ITeacherService {
             }
             onlineCourseIds.put(courseId, behaviorId);
             redisUtil.set(Constants.User.BEHAVIOR_KEY_ONLINE + courseId, behaviorId, Constants.TimeValueByS.HOUR_2);
+            sumOnlineBehavior(behaviorId,true);
         } else if (type == Constants.Behavior.BEHAVIOR_OUTLINE) {
             OutlineCourse outlineCourse = new OutlineCourse();
             outlineCourse.setId(behaviorId);
@@ -397,7 +380,7 @@ public class TeacherServiceImp implements ITeacherService {
         } else {
             return ResponseResult.FAILED("类型错误");
         }
-        return ResponseResult.SUCCESS(teacher.getName() + "-" + courseName + "课程:行为检测开始").setData(studentIds);
+        return ResponseResult.SUCCESS(teacher.getName() + "-" + courseName + "课程:行为检测开始").setData(studentIds.size());
     }
 
     /**
@@ -425,17 +408,17 @@ public class TeacherServiceImp implements ITeacherService {
         if (type == Constants.Behavior.BEHAVIOR_ONLINE) {
             String behaviorId = (String) redisUtil.get(Constants.User.BEHAVIOR_KEY_ONLINE + courseId);
             onlineCourseDao.updateEndTimeById(new Date(), behaviorId);
-            sumOnlineBehavior(behaviorId);
+            sumOnlineBehavior(behaviorId,true);
             OnlineCourse onlineCourseFromDb = onlineCourseDao.findOnlineCourseById(behaviorId);
             redisUtil.del(Constants.User.BEHAVIOR_KEY_ONLINE + courseId);
             onlineCourseIds.remove(courseId);
             return ResponseResult.SUCCESS("线上行为检测结束").setData(onlineCourseFromDb);
         } else if (type == Constants.Behavior.BEHAVIOR_OUTLINE) {
-//            String behaviorId = (String) redisUtil.get(Constants.User.BEHAVIOR_KEY_OUTLINE + courseId);
-//            outlineCourseDao.updateEndTimeById(new Date(), behaviorId);
-//            sumOutlineBehavior(behaviorId);
-//            redisUtil.del(Constants.User.BEHAVIOR_KEY_OUTLINE + courseId);
-//            outlineCourseIds.remove(courseId);
+            String behaviorId = (String) redisUtil.get(Constants.User.BEHAVIOR_KEY_OUTLINE + courseId);
+            outlineCourseDao.updateEndTimeById(new Date(), behaviorId);
+            sumOutlineBehavior(behaviorId);
+            redisUtil.del(Constants.User.BEHAVIOR_KEY_OUTLINE + courseId);
+            outlineCourseIds.remove(courseId);
         }
         return ResponseResult.SUCCESS("行为检测结束");
     }
@@ -443,12 +426,13 @@ public class TeacherServiceImp implements ITeacherService {
     @Override
     public ResponseResult getOnlineNow() {
         ResponseResult result = getBehaviorIdFromRedis();
-        if (result.isSuccess()) {
-            String behaviorId = (String) result.getData();
-            OnlineCourse onlineCourse = onlineCourseDao.findOnlineCourseById(behaviorId);
-            return ResponseResult.SUCCESS("查询课上行为检测信息成功").setData(onlineCourse);
+        if (!result.isSuccess()) {
+            return result;
         }
-        return result;
+        String behaviorId = (String) result.getData();
+        sumOnlineBehavior(behaviorId,false);
+        OnlineCourse onlineCourse = onlineCourseDao.findOnlineCourseById(behaviorId);
+        return ResponseResult.SUCCESS("查询课上行为检测信息成功").setData(onlineCourse);
     }
 
     private ResponseResult getBehaviorIdFromRedis() {
@@ -462,24 +446,23 @@ public class TeacherServiceImp implements ITeacherService {
             return ResponseResult.FAILED("当前没有未开启线上行为检测");
         }
         String behaviorId = (String) redisUtil.get(Constants.User.BEHAVIOR_KEY_ONLINE + (String) courseObj);
-        return ResponseResult.SUCCESS(behaviorId);
+        return ResponseResult.SUCCESS().setData(behaviorId);
     }
 
     @Override
-    public ResponseResult getOnlineInfos(int page, int size, String courseName) {
+    public ResponseResult getOnlineInfos(String courseName) {
         Teacher teacher = checkTeacher();
         if (teacher == null) {
             return ResponseResult.FAILED("当前账号未登录");
         }
-        Pageable pageable = PageUtil.getPageable(page, size, Sort.by(Sort.Direction.DESC, "behaviorStartTime"));
-        Page<OnlineCourse> courses = onlineCourseDao.findAll((Specification<OnlineCourse>) (root, query, cb) -> {
+        List<OnlineCourse> onlineInfos = onlineCourseDao.findAll((Specification<OnlineCourse>) (root, query, cb) -> {
             String courseId = courseDao.findCourseIdByCourseNameAndTeacherId(courseName, teacher.getId());
             if (!TextUtil.isEmpty(courseId)) {
                 return cb.equal(root.get("courseId").as(String.class), courseId);
             }
             return null;
-        }, pageable);
-        return ResponseResult.SUCCESS("线下行为检测信息查询成功").setData(courses);
+        });
+        return ResponseResult.SUCCESS("线下行为检测信息查询成功").setData(onlineInfos);
     }
 
     @Override
@@ -520,24 +503,35 @@ public class TeacherServiceImp implements ITeacherService {
         List<Series> seriesList = new ArrayList<>();
         for (int i = 0; i < 4; i++) {
             Series series = new Series();
-            series.setName(names[1]);
+            series.setName(names[i]);
             series.setData(lists.get(i));
             seriesList.add(series);
         }
         return ResponseResult.SUCCESS("获取图表成功").setData(seriesList);
     }
 
-    private void sumOnlineBehavior(String onlineBehaviorId) {
+    @Override
+    public ResponseResult getTeacherInfo() {
+        Teacher teacher = checkTeacher();
+        if (teacher == null) {
+            return ResponseResult.FAILED("当前用户未登录");
+        }
+        return ResponseResult.SUCCESS("获取用户信息成功").setData(teacher);
+    }
+
+    private void sumOnlineBehavior(String onlineBehaviorId,boolean isWrite) {
         int sumLeaveCount = onlineStudentDao.getSumLeaveCount(onlineBehaviorId);
         int sumSleepCount = onlineStudentDao.getSumSleepCount(onlineBehaviorId);
         int sumTalkCount = onlineStudentDao.getSumTalkCount(onlineBehaviorId);
         int sumOutCount = onlineStudentDao.getSumOutCount(onlineBehaviorId);
-        writeOnlineBehavior(onlineBehaviorId, sumLeaveCount, sumSleepCount, sumTalkCount, sumOutCount);
+        if (isWrite) {
+            writeOnlineBehavior(onlineBehaviorId, sumLeaveCount, sumSleepCount, sumTalkCount, sumOutCount);
+        }
         OnlineCourse onlineCourseFromDb = onlineCourseDao.findOnlineCourseById(onlineBehaviorId);
-        onlineCourseFromDb.addTalkCount(sumTalkCount);
-        onlineCourseFromDb.addSleepCount(sumSleepCount);
-        onlineCourseFromDb.addLeaveCount(sumLeaveCount);
-        onlineCourseFromDb.addOutCount(sumOutCount);
+        onlineCourseFromDb.setTalkCount(sumTalkCount);
+        onlineCourseFromDb.setSleepCount(sumSleepCount);
+        onlineCourseFromDb.setLeaveCount(sumLeaveCount);
+        onlineCourseFromDb.setOutCount(sumOutCount);
         onlineCourseDao.save(onlineCourseFromDb);
     }
 
@@ -547,7 +541,6 @@ public class TeacherServiceImp implements ITeacherService {
                                      int sumTalkCount,
                                      int sumOutCount) {
         String savePath = behaviorFile + File.separator + onlineBehaviorId + ".txt";
-        System.out.println(savePath);
         File behaviorFile = new File(savePath);
         try {
             if (!behaviorFile.exists()) {
@@ -562,39 +555,38 @@ public class TeacherServiceImp implements ITeacherService {
         }
     }
 
-//    private void sumOutlineBehavior(String outlineBehaviorId) {
-//        int sumLookNoteCount = outlineStudentDao.getSumLookNoteCount(outlineBehaviorId);
-//        int sumPassNoteCount = outlineStudentDao.getSumPassNoteCount(outlineBehaviorId);
-//        int sumPhoneCount = outlineStudentDao.getSumPhoneCount(outlineBehaviorId);
-//        int sumWriteCount = outlineStudentDao.getSumWriteCount(outlineBehaviorId);
-//        int sumPutBagCount = outlineStudentDao.getSumPutBagCount(outlineBehaviorId);
-//        writeOutlineBehavior(outlineBehaviorId, sumLookNoteCount, sumPassNoteCount, sumPhoneCount, sumWriteCount, sumPutBagCount);
-//        OutlineCourse outlineCourseFromDb = outlineCourseDao.findOutlineCourseById(outlineBehaviorId);
-//        outlineCourseFromDb.addLookNoteCount(sumLookNoteCount);
-//        outlineCourseFromDb.addPassNoteCount(sumPassNoteCount);
-//        outlineCourseFromDb.addPhoneCount(sumPhoneCount);
-//        outlineCourseFromDb.addWriteCount(sumWriteCount);
-//        outlineCourseFromDb.addPutBagCount(sumPutBagCount);
-//        outlineCourseDao.save(outlineCourseFromDb);
-//    }
-//
-//    private void writeOutlineBehavior(String outlineBehaviorId, int sumLookNoteCount, int sumPassNoteCount, int sumPhoneCount, int sumWriteCount, int sumPutBagCount) {
-//        String savePath = behaviorFile + File.separator + outlineBehaviorId + ".txt";
-//        System.out.println(savePath);
-//        File behaviorFile = new File(savePath);
-//        try {
-//            if (!behaviorFile.exists()) {
-//                behaviorFile.createNewFile();
-//            }
-//            FileOutputStream fos = new FileOutputStream(behaviorFile, true);
-//            fos.write((sumLookNoteCount + "," + sumPassNoteCount + "," + sumPhoneCount + "," + sumWriteCount + "," + sumPutBagCount + "\n")
-//                    .getBytes(StandardCharsets.UTF_8));
-//            fos.close();
-//        } catch (IOException e) {
-//            System.out.println(e);
-//            return;
-//        }
-//    }
+    private void sumOutlineBehavior(String outlineBehaviorId) {
+        int sumLookNoteCount = outlineStudentDao.getSumLookNoteCount(outlineBehaviorId);
+        int sumPassNoteCount = outlineStudentDao.getSumPassNoteCount(outlineBehaviorId);
+        int sumPhoneCount = outlineStudentDao.getSumPhoneCount(outlineBehaviorId);
+        int sumWriteCount = outlineStudentDao.getSumWriteCount(outlineBehaviorId);
+        int sumPutBagCount = outlineStudentDao.getSumPutBagCount(outlineBehaviorId);
+        writeOutlineBehavior(outlineBehaviorId, sumLookNoteCount, sumPassNoteCount, sumPhoneCount, sumWriteCount, sumPutBagCount);
+        OutlineCourse outlineCourseFromDb = outlineCourseDao.findOutlineCourseById(outlineBehaviorId);
+        outlineCourseFromDb.addLookNoteCount(sumLookNoteCount);
+        outlineCourseFromDb.addPassNoteCount(sumPassNoteCount);
+        outlineCourseFromDb.addPhoneCount(sumPhoneCount);
+        outlineCourseFromDb.addWriteCount(sumWriteCount);
+        outlineCourseFromDb.addPutBagCount(sumPutBagCount);
+        outlineCourseDao.save(outlineCourseFromDb);
+    }
+
+    private void writeOutlineBehavior(String outlineBehaviorId, int sumLookNoteCount, int sumPassNoteCount, int sumPhoneCount, int sumWriteCount, int sumPutBagCount) {
+        String savePath = behaviorFile + File.separator + outlineBehaviorId + ".txt";
+        System.out.println(savePath);
+        File behaviorFile = new File(savePath);
+        try {
+            if (!behaviorFile.exists()) {
+                behaviorFile.createNewFile();
+            }
+            FileOutputStream fos = new FileOutputStream(behaviorFile, true);
+            fos.write((sumLookNoteCount + "," + sumPassNoteCount + "," + sumPhoneCount + "," + sumWriteCount + "," + sumPutBagCount + "\n")
+                    .getBytes(StandardCharsets.UTF_8));
+            fos.close();
+        } catch (IOException e) {
+            return;
+        }
+    }
 
 
     /**
@@ -630,10 +622,9 @@ public class TeacherServiceImp implements ITeacherService {
         }
     }
 
-    @Scheduled(fixedRate = Constants.TimeValueByMS.MIN_5)
+    @Scheduled(fixedRate = Constants.TimeValueByMS.MIN_3)
     public void onlineTask() {
         if (onlineCourseIds.size() == 0) {
-            System.out.println("当前没有执行的线上行为");
             return;
         }
         Set<String> courseSet = onlineCourseIds.keySet();
@@ -641,13 +632,13 @@ public class TeacherServiceImp implements ITeacherService {
             if (redisUtil.get(Constants.User.BEHAVIOR_KEY_ONLINE + courseId) == null) {
                 String onlineBehaviorId = onlineCourseIds.get(courseId);
                 onlineCourseDao.updateEndTimeById(new Date(), onlineBehaviorId);
-                sumOnlineBehavior(onlineBehaviorId);
                 onlineCourseIds.remove(courseId);
+                sumOnlineBehavior(onlineCourseIds.get(courseId),true);
                 return;
             }
-            sumOnlineBehavior(onlineCourseIds.get(courseId));
+            sumOnlineBehavior(onlineCourseIds.get(courseId),true);
         }
-        System.out.println("线上任务行为保存成功：" + LocalDateTime.now());
+        System.out.println("线上任务行为更新：" + LocalDateTime.now());
     }
 
     private HttpServletResponse getServletResponse() {
@@ -660,10 +651,9 @@ public class TeacherServiceImp implements ITeacherService {
         return requestAttributes.getRequest();
     }
 
-//    @Scheduled(fixedRate = Constants.TimeValueByMS.MIN_5)
+//    @Scheduled(fixedRate = Constants.TimeValueByMS.MIN_3)
 //    public void outlineTask() {
 //        if (outlineCourseIds.size() == 0) {
-//            System.out.println("当前没有执行的线下行为");
 //            return;
 //        }
 //        Set<String> courseSet = outlineCourseIds.keySet();
@@ -677,6 +667,6 @@ public class TeacherServiceImp implements ITeacherService {
 //            }
 //            sumOnlineBehavior(outlineCourseIds.get(courseId));
 //        }
-//        System.out.println("线下任务行为保存成功：" + LocalDateTime.now());
+//        System.out.println("线下任务行为更新：" + LocalDateTime.now());
 //    }
 }

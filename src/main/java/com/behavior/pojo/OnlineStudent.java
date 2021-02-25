@@ -33,12 +33,24 @@ public class OnlineStudent {
     @Column(name = "file_post")
     private String filePost;
     @OneToOne(targetEntity = Student.class)
-    @JoinColumn(name = "student_id",referencedColumnName = "id",insertable = false,updatable = false)
+    @JoinColumn(name = "student_id", referencedColumnName = "id", insertable = false, updatable = false)
     Student student;
     @JsonIgnoreProperties({"onlineStudents"})
     @ManyToOne(targetEntity = OnlineCourse.class)
-    @JoinColumn(name = "behavior_id",referencedColumnName = "id",insertable = false,updatable = false)
+    @JoinColumn(name = "behavior_id", referencedColumnName = "id", insertable = false, updatable = false)
     private OnlineCourse onlineCourse;
+    @Transient
+    private double sleepPro;
+    @Transient
+    private double talkPro;
+    @Transient
+    private double leavePro;
+    @Transient
+    private double outPro;
+    @Transient
+    private double studyPro;
+    @Transient
+    private double degreePro;
 
     @JsonIgnore
     public String getStudentId() {
@@ -50,9 +62,6 @@ public class OnlineStudent {
         return behaviorId;
     }
 
-    public OnlineCourse getOnlineCourse() {
-        return onlineCourse;
-    }
 
     public void setOnlineCourse(OnlineCourse onlineCourse) {
         this.onlineCourse = onlineCourse;
@@ -132,4 +141,41 @@ public class OnlineStudent {
     public void setPostTime(Date postTime) {
         this.postTime = postTime;
     }
+
+    public int getSleepPro() {
+        this.sleepPro = this.sleepCount * 100.0 / (onlineCourse.getSleepCount() + 0.001);
+        return (int) sleepPro;
+    }
+
+
+    public int getTalkPro() {
+        this.talkPro = this.talkCount * 100.0 / (onlineCourse.getTalkCount() + 0.001);
+        return (int) talkPro;
+    }
+
+
+    public int getLeavePro() {
+        this.leavePro = this.leaveCount * 100.0 / (onlineCourse.getLeaveCount() + 0.001);
+        return (int) leavePro;
+    }
+
+
+    public int getOutPro() {
+        this.outPro = this.outCount * 100.0 / (onlineCourse.getOutCount() + 0.001);
+        return (int) outPro;
+    }
+
+
+    public int getStudyPro() {
+        this.studyPro = 100 -(this.sleepPro + this.talkPro + this.outPro + this.leavePro) / 4;
+        return (int) studyPro;
+    }
+
+
+    public int getDegreePro() {
+        long complete = this.postTime.getTime() - onlineCourse.getBehaviorStartTime().getTime();
+        this.degreePro = complete/10.0/onlineCourse.getLastTime();
+        return (int) degreePro;
+    }
+
 }

@@ -16,7 +16,7 @@ public class CookieUtil {
     public static void setUpCookie(HttpServletResponse response, String key, String value, int age) {
         Cookie cookie = new Cookie(key, value);
         cookie.setPath("/");
-        cookie.setDomain(domain);
+//        cookie.setDomain(domain);
         cookie.setMaxAge(age);
         response.addCookie(cookie);
     }
@@ -28,17 +28,12 @@ public class CookieUtil {
      * @return
      */
     public static String getCookie(HttpServletRequest request,String key){
-        if (request == null){
-            System.out.println("request为空");
-        }
         Cookie[] cookies = request.getCookies();
         if (cookies == null) {
-            System.out.println("cookies为空");
             return null;
         }
         for (Cookie cookie : cookies){
             if (key.equals(cookie.getName())){
-                System.out.println("找到cookie成功");
                 return cookie.getValue();
             }
         }

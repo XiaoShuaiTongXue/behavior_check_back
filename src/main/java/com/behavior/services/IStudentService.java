@@ -31,4 +31,6 @@ public interface IStudentService {
     ResponseResult getSchools();
 
     ResponseResult getOnlineBehaviors(int page, int size);
+
+    ResponseResult findStudentInfo();
 }

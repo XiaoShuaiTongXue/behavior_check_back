@@ -21,8 +21,6 @@ public class OnlineCourse {
     @Column(name = "behavior_end_time")
     @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss", timezone = "GMT+8")
     private Date behaviorEndTime;
-    @Column(name = "course_id")
-    private String courseId;
     @Column(name = "sleep_count")
     private int sleepCount;
     @Column(name = "talk_count")
@@ -31,10 +29,17 @@ public class OnlineCourse {
     private int leaveCount;
     @Column(name = "out_count")
     private int outCount;
+    @Column(name = "course_id")
+    private String courseId;
+    @OneToOne(targetEntity = Course.class)
+    @JoinColumn(name = "course_id", referencedColumnName = "id", insertable = false, updatable = false)
+    private Course course;
     @JsonIgnoreProperties({"onlineCourse"})
     @OneToMany(targetEntity = OnlineStudent.class)
     @JoinColumn(name = "behavior_id", referencedColumnName = "id")
     List<OnlineStudent> onlineStudents;
+    @Transient
+    private float lastTime;
 
     public List<OnlineStudent> getOnlineStudents() {
         return onlineStudents;
@@ -42,14 +47,6 @@ public class OnlineCourse {
 
     public void setOnlineStudents(List<OnlineStudent> onlineStudents) {
         this.onlineStudents = onlineStudents;
-    }
-
-    public int getOutCount() {
-        return outCount;
-    }
-
-    public void addOutCount(int outCount) {
-        this.outCount += outCount;
     }
 
     public String getId() {
@@ -88,31 +85,53 @@ public class OnlineCourse {
         this.courseId = courseId;
     }
 
+    public Course getCourse() {
+        return course;
+    }
+
+    public void setCourse(Course course) {
+        this.course = course;
+    }
 
     public int getSleepCount() {
         return sleepCount;
     }
 
-    public void addSleepCount(int sleepCount) {
-        this.sleepCount += sleepCount;
+    public void setSleepCount(int sleepCount) {
+        this.sleepCount = sleepCount;
     }
-
 
     public int getTalkCount() {
         return talkCount;
     }
 
-    public void addTalkCount(int speakCount) {
-        this.talkCount += speakCount;
+    public void setTalkCount(int talkCount) {
+        this.talkCount = talkCount;
     }
-
 
     public int getLeaveCount() {
         return leaveCount;
     }
 
-    public void addLeaveCount(int outCount) {
-        this.leaveCount += outCount;
+    public void setLeaveCount(int leaveCount) {
+        this.leaveCount = leaveCount;
     }
 
+    public int getOutCount() {
+        return outCount;
+    }
+
+    public void setOutCount(int outCount) {
+        this.outCount = outCount;
+    }
+
+    public int getLastTime() {
+        Date end = this.getBehaviorEndTime();
+        if (end == null) {
+            end = new Date();
+        }
+        long all = end.getTime() - this.getBehaviorStartTime().getTime();
+        this.lastTime = (float)(all  / 1000.0) ;
+        return (int) lastTime;
+    }
 }

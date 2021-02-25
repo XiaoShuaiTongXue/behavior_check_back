@@ -1,0 +1,22 @@
+server:
+  port: 2020
+spring:
+  application:
+    name: behavior_check
+  datasource:
+    url: jdbc:mysql://172.21.16.6:3306/behavior?characterEncoding=utf8&useSSL=false
+    username: root
+    driver-class-name: com.mysql.jdbc.Driver
+    password: 123456
+    hikari:
+      minimum-idle: 3
+      maximum-pool-size: 5
+      max-lifetime: 0
+  redis:
+    host: 172.21.16.6
+    port: 6379
+    password: 123456
+  jpa:
+    show-sql: false
+shuai.blog.file.save-path: /home/ubuntu/docker/behavior_file
+shuai.blog.file.behavior-path: /home/ubuntu/docker/behavior_file/charts_data_file
